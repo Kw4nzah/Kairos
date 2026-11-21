@@ -6,8 +6,24 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -33,9 +49,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kairos.app.data.Reminder
 import com.kairos.app.data.Settings
 import com.kairos.app.logic.Tone
 import kotlinx.coroutines.launch
@@ -46,7 +64,10 @@ fun KairosRoot(vm: MainViewModel = viewModel()) {
     val s = settings
     when {
         s == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
-        !s.onboarded -> OnboardingScreen { name, age -> vm.saveProfile(name, age) }
+        !s.onboarded -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            OnboardingScreen { name -> vm.saveProfile(name) }
+            StatusBarScrim(fade = 0.dp)
+        }
         else -> MainApp(vm, s)
     }
 }
@@ -54,13 +75,14 @@ fun KairosRoot(vm: MainViewModel = viewModel()) {
 @Composable
 private fun MainApp(vm: MainViewModel, settings: Settings) {
     val ctx = LocalContext.current
-    val tone = remember(settings.age) { Tone.forAge(settings.age) }
+    val tone = Tone.set
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var tab by rememberSaveable { mutableStateOf(0) }
-    // -1 = list, 0 = new reminder, >0 = editing that reminder id
-    var editingId by rememberSaveable { mutableStateOf(-1) }
+    var editOpen by rememberSaveable { mutableStateOf(false) }
+    // 0 = new reminder, >0 = editing that reminder id
+    var editingId by rememberSaveable { mutableStateOf(0) }
 
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
@@ -78,84 +100,141 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
     }
 
     val existing = reminders.firstOrNull { it.id == editingId }
-    when {
-        editingId == 0 || (editingId > 0 && existing != null) -> {
-            BackHandler { editingId = -1 }
-            EditScreen(
-                existing = existing,
-                defaultSound = settings.defaultSound,
-                onBack = { editingId = -1 },
-                onSave = { r ->
-                    vm.save(r)
-                    say(if (r.id == 0) tone.snackAdded else tone.snackUpdated)
-                    editingId = -1
-                },
-                onDelete = { id ->
-                    vm.delete(id)
-                    say(tone.snackDeleted)
-                    editingId = -1
-                }
-            )
-        }
-        editingId > 0 -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
-        else -> Scaffold(
-            snackbarHost = { SnackbarHost(snackbar) },
-            floatingActionButton = {
-                if (tab < 2) {
-                    FloatingActionButton(onClick = { editingId = 0 }) {
-                        Icon(Icons.Default.Add, contentDescription = "Yeni görev")
-                    }
+    // Keeps the last edited reminder around so the edit screen does not flash empty while it animates out.
+    val shown = remember { arrayOfNulls<Reminder>(1) }
+    if (editingId == 0) shown[0] = null else if (existing != null) shown[0] = existing
+
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        AnimatedContent(
+            targetState = editOpen,
+            transitionSpec = {
+                if (targetState) {
+                    (fadeIn(tween(DurMed, easing = EaseOut)) +
+                        slideInVertically(tween(DurMed, easing = EaseOut)) { it / 14 }) togetherWith
+                        fadeOut(tween(DurShort))
+                } else {
+                    (fadeIn(tween(DurMed, delayMillis = 60, easing = EaseOut)) +
+                        scaleIn(tween(DurMed, easing = EaseOut), initialScale = 0.985f)) togetherWith
+                        (fadeOut(tween(DurShort)) +
+                            slideOutVertically(tween(DurMed, easing = EaseOut)) { it / 14 })
                 }
             },
-            bottomBar = {
-                NavigationBar {
-                    NavigationBarItem(
-                        selected = tab == 0, onClick = { tab = 0 },
-                        icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                        label = { Text("Görevler") }
-                    )
-                    NavigationBarItem(
-                        selected = tab == 1, onClick = { tab = 1 },
-                        icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-                        label = { Text("Takvim") }
-                    )
-                    NavigationBarItem(
-                        selected = tab == 2, onClick = { tab = 2 },
-                        icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                        label = { Text("Ayarlar") }
-                    )
+            label = "screen"
+        ) { editing ->
+            if (editing) {
+                BackHandler { editOpen = false }
+                EditScreen(
+                    existing = shown[0],
+                    defaultSound = settings.defaultSound,
+                    onBack = { editOpen = false },
+                    onSave = { r ->
+                        vm.save(r)
+                        say(if (r.id == 0) tone.snackAdded else tone.snackUpdated)
+                        editOpen = false
+                    },
+                    onDelete = { id ->
+                        vm.delete(id)
+                        say(tone.snackDeleted)
+                        editOpen = false
+                    }
+                )
+            } else {
+                MainScaffold(
+                    tab = tab,
+                    onTab = { tab = it },
+                    snackbar = snackbar,
+                    onNew = { editingId = 0; editOpen = true }
+                ) { padding ->
+                    AnimatedContent(
+                        targetState = tab,
+                        transitionSpec = {
+                            val dir = if (targetState > initialState) 1 else -1
+                            (fadeIn(tween(DurMed, delayMillis = 40, easing = EaseOut)) +
+                                slideInHorizontally(tween(DurMed, easing = EaseOut)) { dir * it / 12 }) togetherWith
+                                (fadeOut(tween(DurShort)) +
+                                    slideOutHorizontally(tween(DurMed, easing = EaseOut)) { -dir * it / 12 })
+                        },
+                        label = "tab"
+                    ) { t ->
+                        when (t) {
+                            0 -> TasksScreen(
+                                reminders = reminders,
+                                tone = tone,
+                                name = settings.name,
+                                padding = padding,
+                                onToggle = { r ->
+                                    if (r.done) {
+                                        vm.reopen(r.id); say(tone.snackReopened)
+                                    } else {
+                                        vm.complete(r.id); say(tone.snackDone)
+                                    }
+                                },
+                                onOpen = { editingId = it.id; editOpen = true }
+                            )
+                            1 -> CalendarScreen(
+                                reminders = reminders,
+                                tone = tone,
+                                padding = padding,
+                                onOpen = { editingId = it.id; editOpen = true }
+                            )
+                            else -> SettingsScreen(
+                                settings = settings,
+                                tone = tone,
+                                padding = padding,
+                                vm = vm,
+                                say = ::say
+                            )
+                        }
+                    }
                 }
             }
-        ) { padding ->
-            when (tab) {
-                0 -> TasksScreen(
-                    reminders = reminders,
-                    tone = tone,
-                    name = settings.name,
-                    padding = padding,
-                    onToggle = { r ->
-                        if (r.done) {
-                            vm.reopen(r.id); say(tone.snackReopened)
-                        } else {
-                            vm.complete(r.id); say(tone.snackDone)
-                        }
-                    },
-                    onOpen = { editingId = it.id }
+        }
+        // Solid strip behind the status bar. The edit screen has its own app bar, so no fade there.
+        val fade by animateDpAsState(if (editOpen) 0.dp else 24.dp, tween(DurMed), label = "scrimFade")
+        StatusBarScrim(fade = fade)
+    }
+}
+
+@Composable
+private fun MainScaffold(
+    tab: Int,
+    onTab: (Int) -> Unit,
+    snackbar: SnackbarHostState,
+    onNew: () -> Unit,
+    content: @Composable (PaddingValues) -> Unit
+) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = tab < 2,
+                enter = scaleIn(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(DurShort)),
+                exit = scaleOut(tween(DurShort)) + fadeOut(tween(DurShort))
+            ) {
+                FloatingActionButton(onClick = onNew) {
+                    Icon(Icons.Default.Add, contentDescription = "Yeni görev")
+                }
+            }
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = tab == 0, onClick = { onTab(0) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                    label = { Text("Görevler") }
                 )
-                1 -> CalendarScreen(
-                    reminders = reminders,
-                    tone = tone,
-                    padding = padding,
-                    onOpen = { editingId = it.id }
+                NavigationBarItem(
+                    selected = tab == 1, onClick = { onTab(1) },
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                    label = { Text("Takvim") }
                 )
-                else -> SettingsScreen(
-                    settings = settings,
-                    tone = tone,
-                    padding = padding,
-                    vm = vm,
-                    say = ::say
+                NavigationBarItem(
+                    selected = tab == 2, onClick = { onTab(2) },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    label = { Text("Ayarlar") }
                 )
             }
-        }
-    }
+        },
+        content = content
+    )
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kairos.app.data.Reminder
 import com.kairos.app.data.Repo
 import com.kairos.app.data.Settings
+import com.kairos.app.data.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -26,8 +27,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun complete(id: Int) = viewModelScope.launch { repo.complete(id) }
     fun reopen(id: Int) = viewModelScope.launch { repo.reopen(id) }
 
-    fun saveProfile(name: String, age: Int) = viewModelScope.launch { repo.prefs.setProfile(name, age) }
+    fun saveProfile(name: String) = viewModelScope.launch { repo.prefs.setProfile(name) }
     fun setDefaultSound(key: String) = viewModelScope.launch { repo.prefs.setDefaultSound(key) }
+
+    fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { repo.prefs.setThemeMode(mode) }
 
     /** Caller must have obtained calendar permissions before enabling. */
     fun setHardcore(on: Boolean) = viewModelScope.launch {

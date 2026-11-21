@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -19,16 +18,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
-/** First-launch screen. Copy is neutral because the tone is only known once the age is entered. */
+/** First-launch screen: asks only for a name, stored on-device. */
 @Composable
-fun OnboardingScreen(onDone: (name: String, age: Int) -> Unit) {
+fun OnboardingScreen(onDone: (name: String) -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
-    var age by rememberSaveable { mutableStateOf("") }
-    val ageValue = age.toIntOrNull()
-    val valid = name.isNotBlank() && ageValue != null && ageValue in 5..120
+    val valid = name.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -37,11 +33,12 @@ fun OnboardingScreen(onDone: (name: String, age: Int) -> Unit) {
             .padding(horizontal = 28.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Kairos", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary)
+        Text("Kairos", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fadeIn(0))
         Spacer(Modifier.height(8.dp))
         Text(
-            "Doğru an geldiğinde hatırlatırım. Önce seni tanıyayım.",
-            style = MaterialTheme.typography.bodyLarge
+            "Doğru an geldiğinde hatırlatırım. Önce adını öğreneyim.",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fadeIn(1)
         )
         Spacer(Modifier.height(28.dp))
         OutlinedTextField(
@@ -49,29 +46,19 @@ fun OnboardingScreen(onDone: (name: String, age: Int) -> Unit) {
             onValueChange = { name = it.take(30) },
             label = { Text("Adın") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = age,
-            onValueChange = { v -> age = v.filter { it.isDigit() }.take(3) },
-            label = { Text("Yaşın") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().fadeIn(2)
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            "Bu bilgiler yalnızca bu cihazda saklanır, hiçbir yere gönderilmez. " +
-                "Yaşına göre sana hitap şeklimi seçerim.",
+            "Adın yalnızca bu cihazda saklanır, hiçbir yere gönderilmez.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(24.dp))
         Button(
-            onClick = { onDone(name.trim(), ageValue!!) },
+            onClick = { onDone(name.trim()) },
             enabled = valid,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().fadeIn(3)
         ) { Text("Başla") }
     }
 }

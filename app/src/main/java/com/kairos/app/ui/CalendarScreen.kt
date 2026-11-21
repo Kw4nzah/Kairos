@@ -1,5 +1,17 @@
 package com.kairos.app.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -81,7 +93,16 @@ fun CalendarScreen(
                 IconButton(onClick = { monthIndex -= 1 }) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Önceki ay")
                 }
-                Text(Fmt.month(month.atDay(1)), style = MaterialTheme.typography.titleLarge)
+                AnimatedContent(
+                    targetState = monthIndex,
+                    transitionSpec = { monthTransition(targetState > initialState) },
+                    label = "monthTitle"
+                ) { mi ->
+                    Text(
+                        Fmt.month(YearMonth.of(mi / 12, mi % 12 + 1).atDay(1)),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
                 IconButton(onClick = { monthIndex += 1 }) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Sonraki ay")
                 }
@@ -101,6 +122,12 @@ fun CalendarScreen(
             }
         }
         item {
+            AnimatedContent(
+                targetState = monthIndex,
+                transitionSpec = { monthTransition(targetState > initialState) },
+                label = "monthGrid"
+            ) { mi ->
+            val month = YearMonth.of(mi / 12, mi % 12 + 1)
             val offset = month.atDay(1).dayOfWeek.value - 1
             val cells: List<LocalDate?> =
                 List<LocalDate?>(offset) { null } + (1..month.lengthOfMonth()).map<Int, LocalDate?> { month.atDay(it) }
@@ -122,13 +149,17 @@ fun CalendarScreen(
                     }
                 }
             }
+            }
         }
         item {
-            Text(
-                Fmt.date(selected),
-                style = MaterialTheme.typography.titleMedium,
+            AnimatedContent(
+                targetState = selected,
+                transitionSpec = { fadeIn(tween(DurMed, easing = EaseOut)) togetherWith fadeOut(tween(DurShort)) },
+                label = "selectedDate",
                 modifier = Modifier.padding(top = 16.dp, start = 4.dp)
-            )
+            ) { d ->
+                Text(Fmt.date(d), style = MaterialTheme.typography.titleMedium)
+            }
         }
         if (dayItems.isEmpty()) {
             item {
@@ -141,9 +172,11 @@ fun CalendarScreen(
             }
         } else {
             items(dayItems, key = { "c-${it.id}" }) { r ->
+                val source = remember { MutableInteractionSource() }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                    modifier = Modifier.fillMaxWidth().clickable { onOpen(r) }
+                    modifier = Modifier.animateItem().fillMaxWidth().pressScale(source)
+                        .clickable(interactionSource = source, indication = LocalIndication.current) { onOpen(r) }
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -151,10 +184,10 @@ fun CalendarScreen(
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        Text(
+                        StrikeText(
                             r.title,
+                            struck = r.done,
                             style = MaterialTheme.typography.bodyLarge,
-                            textDecoration = if (r.done) TextDecoration.LineThrough else null,
                             modifier = Modifier.padding(start = 16.dp)
                         )
                     }
@@ -164,18 +197,36 @@ fun CalendarScreen(
     }
 }
 
+private fun monthTransition(forward: Boolean): ContentTransform {
+    val dir = if (forward) 1 else -1
+    return (fadeIn(tween(DurMed, delayMillis = 40, easing = EaseOut)) +
+        slideInHorizontally(tween(DurMed, easing = EaseOut)) { dir * it / 8 }) togetherWith
+        (fadeOut(tween(DurShort)) + slideOutHorizontally(tween(DurMed, easing = EaseOut)) { -dir * it / 8 })
+}
+
 @Composable
 private fun DayCell(day: LocalDate, isSelected: Boolean, isToday: Boolean, hasItems: Boolean, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(12.dp)
-    var mod = Modifier.fillMaxWidth().aspectRatio(1f)
-    mod = if (isSelected) mod.background(scheme.primaryContainer, shape) else mod
+    val bg by animateColorAsState(
+        if (isSelected) scheme.primaryContainer else scheme.primaryContainer.copy(alpha = 0f),
+        tween(DurShort, easing = EaseOut), label = "dayBg"
+    )
+    val fg by animateColorAsState(
+        if (isSelected) scheme.onPrimaryContainer else scheme.onSurface,
+        tween(DurShort, easing = EaseOut), label = "dayFg"
+    )
+    val source = remember { MutableInteractionSource() }
+    var mod = Modifier.fillMaxWidth().aspectRatio(1f).pressScale(source, 0.92f).background(bg, shape)
     mod = if (isToday) mod.border(1.5.dp, scheme.primary, shape) else mod
-    Box(mod.clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(
+        mod.clickable(interactionSource = source, indication = null, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
         Text(
             day.dayOfMonth.toString(),
             style = MaterialTheme.typography.bodyLarge,
-            color = if (isSelected) scheme.onPrimaryContainer else scheme.onSurface
+            color = fg
         )
         if (hasItems) {
             Box(

@@ -1,6 +1,9 @@
 package com.kairos.app.ui
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,8 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
+
+
 import androidx.compose.ui.unit.dp
 import com.kairos.app.data.Reminder
 import com.kairos.app.logic.ToneSet
@@ -55,12 +58,12 @@ fun TasksScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item {
+        item(key = "greeting") {
             Text(
                 tone.greeting(name, today.dayOfYear),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                modifier = Modifier.fadeIn().padding(horizontal = 4.dp, vertical = 8.dp)
             )
         }
         if (perms.reminderIssues) {
@@ -98,7 +101,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
 ) {
     item(key = "header-$title") {
         Row(
-            Modifier.padding(start = 4.dp, top = 16.dp, bottom = 2.dp),
+            Modifier.animateItem().padding(start = 4.dp, top = 16.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge)
@@ -115,29 +118,35 @@ private fun androidx.compose.foundation.lazy.LazyListScope.section(
                 empty,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                modifier = Modifier.animateItem().padding(horizontal = 4.dp, vertical = 4.dp)
             )
         }
     } else {
-        items(list, key = { "r-${it.id}" }) { r -> ReminderRow(r, onToggle, onOpen) }
+        items(list, key = { "r-${it.id}" }) { r -> ReminderRow(r, onToggle, onOpen, Modifier.animateItem()) }
     }
 }
 
 @Composable
-fun ReminderRow(r: Reminder, onToggle: (Reminder) -> Unit, onOpen: (Reminder) -> Unit) {
+fun ReminderRow(
+    r: Reminder,
+    onToggle: (Reminder) -> Unit,
+    onOpen: (Reminder) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val source = remember { MutableInteractionSource() }
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.fillMaxWidth().clickable { onOpen(r) }
+        modifier = modifier.fillMaxWidth().pressScale(source)
+            .clickable(interactionSource = source, indication = LocalIndication.current) { onOpen(r) }
     ) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = r.done, onCheckedChange = { onToggle(r) })
             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(
+                StrikeText(
                     r.title,
+                    struck = r.done,
                     style = MaterialTheme.typography.titleMedium,
-                    textDecoration = if (r.done) TextDecoration.LineThrough else null,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 2
                 )
                 Text(
                     Fmt.subtitle(r),

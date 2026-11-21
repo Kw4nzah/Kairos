@@ -92,7 +92,7 @@ object Notifier {
         ) return
         ensureChannels(ctx)
 
-        val tone = Tone.forAge(settings.age)
+        val tone = Tone.set
         val name = settings.name
         val seed = r.id + stage
         val nagging = stage == 2 && r.snoozeCount >= SnoozeMachine.MAX_SNOOZES

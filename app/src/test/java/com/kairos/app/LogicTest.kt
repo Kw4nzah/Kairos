@@ -5,7 +5,6 @@ import com.kairos.app.logic.RepeatType
 import com.kairos.app.logic.SnoozeMachine
 import com.kairos.app.logic.SnoozeMachine.Action
 import com.kairos.app.logic.Tone
-import com.kairos.app.logic.ToneStyle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -94,22 +93,11 @@ class LogicTest {
 
     // ---- Tone ----
 
-    @Test fun toneSelectedByAge() {
-        assertEquals(ToneStyle.GENZ, Tone.styleFor(12))
-        assertEquals(ToneStyle.GENZ, Tone.styleFor(29))
-        assertEquals(ToneStyle.FORMAL, Tone.styleFor(30))
-        assertEquals(ToneStyle.FORMAL, Tone.styleFor(64))
-        assertEquals(ToneStyle.FORMAL, Tone.forAge(45).style)
-    }
-
-    @Test fun toneTextsAreFilledAndFlavoured() {
-        val formal = Tone.forAge(40)
-        val genz = Tone.forAge(20)
-        assertTrue(formal.allTexts().all { it.isNotBlank() })
-        assertTrue(genz.allTexts().all { it.isNotBlank() })
-        assertTrue(formal.mainBody("Su ic", "Ali", 0).contains("Su ic"))
-        assertFalse(formal.greeting("Ali", 1).contains("{name}"))
-        assertTrue(formal.headsUpTitle("Ali").contains("Efendim"))
-        assertTrue(genz.checkTitle("Ali").contains("Knk"))
+    @Test fun toneTextsAreFilled() {
+        val t = Tone.set
+        assertTrue(t.allTexts().all { it.isNotBlank() })
+        assertTrue(t.mainBody("Su ic", "Ali", 0).contains("Su ic"))
+        assertFalse(t.greeting("Ali", 1).contains("{name}"))
+        assertFalse(t.nagBody("Su ic", "Ali", 1).contains("{title}"))
     }
 }

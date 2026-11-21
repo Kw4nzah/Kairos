@@ -27,7 +27,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kairos.app.data.ThemeMode
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,7 +55,7 @@ import com.kairos.app.system.Sounds
 import com.kairos.app.system.openPermissionSettings
 import com.kairos.app.system.rememberPerms
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     settings: Settings,
@@ -84,32 +90,43 @@ fun SettingsScreen(
             ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Ayarlar", style = MaterialTheme.typography.headlineSmall)
+        Text("Ayarlar", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fadeIn(0))
 
-        SettingsCard {
-            Text("Profil", style = MaterialTheme.typography.titleMedium)
+        SettingsSection("Görünüm", 1) {
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                val modes = listOf(
+                    ThemeMode.SYSTEM to "Sistem",
+                    ThemeMode.LIGHT to "Açık",
+                    ThemeMode.DARK to "Koyu"
+                )
+                modes.forEachIndexed { i, (mode, label) ->
+                    SegmentedButton(
+                        selected = settings.themeMode == mode,
+                        onClick = { vm.setThemeMode(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(i, modes.size)
+                    ) { Text(label) }
+                }
+            }
+        }
+
+        SettingsSection("Profil", 2) {
+            Text(settings.name, style = MaterialTheme.typography.bodyLarge)
             Text(
-                "${settings.name}, ${settings.age} yaş",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                "Bilgiler yalnızca bu cihazda saklanır.",
+                "Ad yalnızca bu cihazda saklanır.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            OutlinedButton(onClick = { editProfile = true }) { Text("Ad ve yaşı değiştir") }
+            OutlinedButton(onClick = { editProfile = true }) { Text("Adı değiştir") }
         }
 
-        SettingsCard {
+        SettingsSection("Hardcore modu", 3) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Hardcore modu", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Tüm hatırlatmalar telefonun takvimine de yazılır (10 dk önce ve tam zamanında alarm).",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    "Tüm hatırlatmalar telefonun takvimine de yazılır (10 dk önce ve tam zamanında alarm).",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp)
+                )
                 Switch(
                     checked = settings.hardcore,
                     onCheckedChange = { on ->
@@ -127,8 +144,12 @@ fun SettingsScreen(
             }
         }
 
-        SettingsCard {
-            Text("Varsayılan ses", style = MaterialTheme.typography.titleMedium)
+        SettingsSection("Sesler", 4) {
+            Text(
+                "Varsayılan hatırlatma sesi",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (s in Sounds.all) {
                     FilterChip(
@@ -146,8 +167,7 @@ fun SettingsScreen(
             }
         }
 
-        SettingsCard {
-            Text("İzinler", style = MaterialTheme.typography.titleMedium)
+        SettingsSection("İzinler", 5) {
             PermRow("Bildirimler", perms.notifications) { openPermissionSettings(ctx, PermKind.NOTIFICATIONS) }
             PermRow("Tam zamanlı alarm", perms.exactAlarm) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
             PermRow("Tam ekran bildirim", perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
@@ -156,32 +176,24 @@ fun SettingsScreen(
 
     if (editProfile) {
         var name by remember { mutableStateOf(settings.name) }
-        var age by remember { mutableStateOf(settings.age.toString()) }
-        val ageValue = age.toIntOrNull()
         AlertDialog(
             onDismissRequest = { editProfile = false },
-            title = { Text("Ad ve yaş") },
+            title = { Text("Ad") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = name, onValueChange = { name = it.take(30) },
                         label = { Text("Ad") }, singleLine = true
                     )
-                    OutlinedTextField(
-                        value = age, onValueChange = { v -> age = v.filter { it.isDigit() }.take(3) },
-                        label = { Text("Yaş") }, singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
                 }
             },
             confirmButton = {
                 TextButton(
-                    enabled = name.isNotBlank() && ageValue != null && ageValue in 5..120,
+                    enabled = name.isNotBlank(),
                     onClick = {
-                        vm.saveProfile(name.trim(), ageValue!!)
+                        vm.saveProfile(name.trim())
                         editProfile = false
-                        // The tone is derived from the age, so it switches as soon as DataStore emits.
-                        say(com.kairos.app.logic.Tone.forAge(ageValue).snackProfileSaved)
+                        say(com.kairos.app.logic.Tone.set.snackProfileSaved)
                     }
                 ) { Text("Kaydet") }
             },
@@ -190,14 +202,24 @@ fun SettingsScreen(
     }
 }
 
+/** One separate block of settings: its own heading above a card. */
 @Composable
-private fun SettingsCard(content: @Composable () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            content()
+private fun SettingsSection(title: String, index: Int, content: @Composable () -> Unit) {
+    Column(Modifier.fadeIn(index).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+        )
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                content()
+            }
         }
     }
 }
