@@ -1,0 +1,94 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=360">
+<title>Kairos UI mockups</title>
+<style>
+:root{--primary:#0B6B66;--onPrimary:#fff;--pc:#C6EDE8;--opc:#00201E;--sec:#8A5A00;--secc:#FFDDB0;--osecc:#2B1800;--ter:#B4442F;--bg:#F8F6F1;--on:#181C1B;--sv:#E1E8E5;--osv:#3F4947;--cl:#F2F0EB;--c:#ECEAE5;--ch:#E6E4DF;--out:#6F7977;--ov:#BEC9C6;--surf0:#fff}
+[data-theme=dark]{--primary:#6FD8CF;--onPrimary:#003734;--pc:#00504C;--opc:#C6EDE8;--sec:#F2BC6B;--secc:#63400A;--osecc:#FFDDB0;--ter:#FFB4A4;--bg:#0E1413;--on:#DDE4E1;--sv:#3F4947;--osv:#BEC9C6;--cl:#161D1C;--c:#1A2120;--ch:#242B2A;--out:#899390;--ov:#3F4947;--surf0:#090F0E}
+*{box-sizing:border-box;margin:0}
+body{width:360px;height:720px;overflow:hidden;background:var(--bg);color:var(--on);font:14px/1.4 Roboto,"Segoe UI",system-ui,sans-serif}
+.s{width:360px;height:720px;display:flex;flex-direction:column;position:relative}
+.sb{height:24px;padding:4px 16px;font-size:11px;display:flex;justify-content:space-between;color:var(--osv)}
+.body{flex:1;padding:8px 16px;overflow:hidden;display:flex;flex-direction:column;gap:12px}
+h1{font-size:24px;font-weight:500}h2{font-size:16px;font-weight:500}
+.sub{font-size:12px;color:var(--osv)}
+.nav{height:72px;background:var(--c);display:flex;justify-content:space-around;align-items:center;font-size:12px}
+.nav div{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--osv)}
+.nav i{width:56px;height:28px;border-radius:14px;display:block}
+.nav .a{color:var(--on);font-weight:600}.nav .a i{background:var(--pc)}
+.card{background:var(--cl);border-radius:16px;padding:14px}
+.row{display:flex;align-items:center;gap:12px}.grow{flex:1}
+.item{background:var(--cl);border-radius:14px;padding:10px 12px;display:flex;gap:12px;align-items:center}
+.ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--out)}.ck.d{background:var(--primary);border-color:var(--primary)}
+.t{font-size:15px}.item.d .t{text-decoration:line-through;color:var(--osv)}
+.sec{color:var(--primary);font-size:13px;font-weight:600;margin-top:4px}
+.empty{color:var(--osv);font-size:13px;padding:6px 2px}
+.fab{position:absolute;right:16px;bottom:88px;width:56px;height:56px;border-radius:16px;background:var(--pc);color:var(--opc);font-size:28px;display:grid;place-items:center}
+.btn{background:var(--primary);color:var(--onPrimary);border-radius:20px;height:40px;display:grid;place-items:center;font-weight:500}
+.obtn{border:1px solid var(--out);border-radius:20px;height:40px;display:grid;place-items:center;color:var(--primary);padding:0 16px}
+.field{border:1px solid var(--out);border-radius:6px;padding:14px 12px;position:relative;margin-top:6px}
+.field b{position:absolute;top:-8px;left:8px;background:var(--bg);padding:0 4px;font-size:11px;font-weight:400;color:var(--primary)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--out);border-radius:8px;padding:6px 12px;font-size:13px}.chip.on{background:var(--sv);border-color:transparent;font-weight:500}
+.sw{width:52px;height:32px;border-radius:16px;background:var(--primary);position:relative;flex:none}.sw:after{content:"";position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:var(--onPrimary)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:13px}
+.cal span{height:34px;width:34px;justify-self:center;display:grid;place-items:center;border-radius:50%;position:relative}
+.cal .h{font-size:11px;color:var(--osv);height:20px}
+.cal .sel{background:var(--primary);color:var(--onPrimary)}.cal .dot:after{content:"";position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--sec)}
+.cal .tod{border:1px solid var(--primary)}
+.shade{background:var(--ch);flex:1;display:flex;flex-direction:column;gap:6px;padding:16px}
+.n{background:var(--surf0);border-radius:22px;padding:14px 16px;box-shadow:0 1px 4px #0006;border-left:4px solid var(--primary)}
+[data-theme=dark] .n{background:var(--cl)}
+.n .h{display:flex;gap:8px;font-size:11px;color:var(--osv);align-items:center}.n .h i{width:14px;height:14px;border-radius:50%;background:var(--primary)}
+.n .nt{font-weight:600;font-size:15px;margin-top:4px}.n .nb{font-size:14px;margin-top:2px}
+.acts{display:flex;gap:16px;margin-top:10px;color:var(--primary);font-weight:600;font-size:13px;flex-wrap:wrap}
+.lbl{font-size:11px;color:var(--osv);padding:4px 4px 0}
+</style></head><body><div id="r"></div>
+<script>
+const q=new URLSearchParams(location.search),scr=q.get('s')||'tasks',th=q.get('t')||'light',tone=q.get('tone')||'genz';
+document.documentElement.dataset.theme=th;
+const F=tone=='formal';
+// Strings below are copied from logic/Tone.kt and the Compose screens.
+const T={
+ greet:F?'Hoş geldiniz, Samuel. Emrinize amadeyim, Efendim.':'Naber Samuel, hoş geldin kanka.',
+ empT:F?'Bugün için bekleyen bir göreviniz yok, Efendim.':'Bugün boşsun kanka, no cap.',
+ empD:F?'Henüz tamamlanmış bir göreviniz bulunmuyor.':'Henüz bitirdiğin bir şey yok bro.'};
+const sb='<div class="sb"><span>09:41</span><span>100%</span></div>';
+const nav=a=>`<div class="nav">${['Görevler','Takvim','Ayarlar'].map(x=>`<div class="${x==a?'a':''}"><i></i>${x}</div>`).join('')}</div>`;
+const item=(t,time,d)=>`<div class="item ${d?'d':''}"><div class="ck ${d?'d':''}"></div><div class="grow"><div class="t">${t}</div><div class="sub">${time}</div></div></div>`;
+const calGrid=()=>{let h='';for(let i=1;i<=30;i++){const c=[i==22?'tod':'',i==24?'sel':'',[3,10,22,24,27].includes(i)?'dot':''].join(' ');h+=`<span class="${c}">${i}</span>`}return '<span></span>'.repeat(6)+h};
+const S={
+onboarding:`<div class="s">${sb}<div class="body" style="justify-content:center;gap:16px"><h1 style="font-size:36px;color:var(--primary)">Kairos</h1>
+<div class="field"><b>Adın</b>Samuel</div><div class="field"><b>Yaşın</b>${F?'34':'22'}</div>
+<div class="btn">Başla</div></div></div>`,
+tasks:`<div class="s">${sb}<div class="body"><div class="sub">${T.greet}</div><h1>Görevler</h1>
+<div class="sec">Bugün</div>${item('İlaç al','14:30',0)}${item('Toplantı hazırlığı','17:00',0)}
+<div class="sec">Yaklaşan</div>${item('Spor salonu','Yarın 07:30',0)}${item('Fatura öde','Cum 10:00',0)}
+<div class="sec">Tamamlanan</div>${item('Market','Dün 18:00',1)}</div><div class="fab">+</div>${nav('Görevler')}</div>`,
+calendar:`<div class="s">${sb}<div class="body"><h1>Takvim</h1><div class="row"><h2 class="grow">Kasım 2026</h2><span class="sub">‹ &nbsp; ›</span></div>
+<div class="cal">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(d=>`<span class="h">${d}</span>`).join('')}${calGrid()}</div>
+<div class="sec">24 Kasım</div>${item('Spor salonu','07:30',0)}</div><div class="fab">+</div>${nav('Takvim')}</div>`,
+edit:`<div class="s">${sb}<div class="body"><h1>Görev</h1>
+<div class="field"><b>Başlık</b>İlaç al</div><div class="field" style="height:70px"><b>Notlar</b>Yemekten sonra</div>
+<h2>Zaman</h2><div class="row"><div class="obtn grow">22 Kasım 2026</div><div class="obtn">14:30</div></div>
+<h2>Tekrar</h2><div class="chips"><span class="chip">Yok</span><span class="chip on">Her gün</span><span class="chip">Haftalık</span><span class="chip">Aylık</span></div>
+<h2>Ses</h2><div class="chips"><span class="chip on">Zil</span><span class="chip">Miyav</span><span class="chip">Bruh</span><span class="chip">Ördek</span><span class="chip">Metal boru</span><span class="chip">Saksafon</span></div>
+<div class="sub">Önizleme: Zil</div><div class="btn" style="margin-top:auto;margin-bottom:12px">Kaydet</div></div></div>`,
+settings:`<div class="s">${sb}<div class="body"><h1>Ayarlar</h1>
+<div class="card"><h2>Profil</h2><div class="sub" style="margin:4px 0 10px">Samuel, ${F?34:22}</div><div class="obtn" style="width:max-content">Ad ve yaşı değiştir</div></div>
+<div class="card row"><div class="grow"><h2>Hardcore modu</h2><div class="sub">Tüm hatırlatmalar telefonun takvimine de yazılır (10 dk önce ve tam zamanında alarm).</div></div><div class="sw"></div></div>
+<div class="card"><h2>Varsayılan ses</h2><div class="chips" style="margin:8px 0"><span class="chip on">Zil</span><span class="chip">Miyav</span><span class="chip">Bruh</span></div><div class="sub">Önizleme: Zil</div></div>
+<div class="card"><h2>İzinler</h2></div></div>${nav('Ayarlar')}</div>`,
+notif:()=>{
+ const n=(w,ti,b,acts)=>`<div class="lbl">${w}</div><div class="n"><div class="h"><i></i>Kairos • şimdi</div><div class="nt">${ti}</div><div class="nb">${b}</div>${acts?`<div class="acts">${acts.map(a=>`<span>${a}</span>`).join('')}</div>`:''}</div>`;
+ const k='"İlaç al"', done='Tamam, yaptım (bir daha gönderme)';
+ return `<div class="s">${sb}<div class="shade">`+(F?
+  n('T-10 dk','Efendim, vakit yaklaşıyor',`Emriniz üzerine hatırlatıyorum: ${k} için 10 dakika kaldı.`)+
+  n('T','Efendim, vakit geldi',`Emriniz üzerine hatırlatıyorum: ${k} vakti şimdi.`)+
+  n('T+5 dk (son bildirim)','Efendim, bir teyit rica ederim',`${k} işini tamamlayabildiniz mi, Efendim?`,['5 dk ertele','10 dk ertele'])+
+  n('3 erteleme sonrası','Efendim, ısrarımı bağışlayın',`Üç erteleme geride kaldı, Efendim. ${k} artık sonlandırılmalı.`,['10 dk daha ertele',done])
+ :
+  n('T-10 dk','Kanka, az kaldı',`${k} için 10 dk kaldı knk, hazırlan.`)+
+  n('T','Kanka, zamanı geldi',`${k} şimdi knk, hadi kalk.`)+
+  n('T+5 dk (son bildirim)','Knk, yaptın mı?',`${k} işini hallettin mi kanka?`,['5 dk ertele','10 dk ertele'])+
+  n('3 erteleme sonrası','Bro bu sefer ciddiyim',`3 kere erteledin kanka, ${k} artık bitsin.`,['10 dk daha ertele',done]))+`</div></div>`}};
+document.getElementById('r').innerHTML=typeof S[scr]=='function'?S[scr]():S[scr];
+</script></body></html>
