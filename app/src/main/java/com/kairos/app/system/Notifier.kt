@@ -1,0 +1,152 @@
+package com.kairos.app.system
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.media.AudioAttributes
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import com.kairos.app.MainActivity
+import com.kairos.app.R
+import com.kairos.app.data.Reminder
+import com.kairos.app.data.Settings
+import com.kairos.app.logic.SnoozeMachine
+import com.kairos.app.logic.Tone
+
+/**
+ * Posts the notification chain. Every notification is deliberately sticky: ongoing, not auto-cancelled,
+ * no dismiss action, and a deleteIntent that immediately re-posts it if the user swipes it away.
+ */
+object Notifier {
+    private val VIBRATION = longArrayOf(0, 600, 250, 600, 250, 900)
+
+    /** One max-importance alarm-category channel per sound (channel sound is immutable). */
+    fun ensureChannels(ctx: Context) {
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val attrs = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        for (s in Sounds.all) {
+            val ch = NotificationChannel(
+                Sounds.channelId(s.key), "Kairos - ${s.label}", NotificationManager.IMPORTANCE_HIGH
+            )
+            ch.description = "Hatırlatmalar (${s.label} sesi)"
+            ch.setSound(Sounds.uri(ctx, s), attrs)
+            ch.enableVibration(true)
+            ch.vibrationPattern = VIBRATION
+            ch.enableLights(true)
+            ch.lightColor = Color.parseColor("#0B6B66")
+            ch.lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            ch.setBypassDnd(true)
+            nm.createNotificationChannel(ch)
+        }
+    }
+
+    private fun broadcast(ctx: Context, code: Int, intent: Intent): PendingIntent =
+        PendingIntent.getBroadcast(
+            ctx, code, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+    private fun openApp(ctx: Context, id: Int): PendingIntent {
+        val intent = Intent(ctx, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        return PendingIntent.getActivity(
+            ctx, Codes.content(id), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+    }
+
+    private fun repostIntent(ctx: Context, id: Int, stage: Int): PendingIntent =
+        broadcast(
+            ctx, Codes.repost(id, stage),
+            Intent(ctx, ActionReceiver::class.java).setAction(ACTION_REPOST)
+                .putExtra(EXTRA_ID, id).putExtra(EXTRA_STAGE, stage)
+        )
+
+    private fun actionIntent(ctx: Context, id: Int, action: SnoozeMachine.Action): PendingIntent =
+        broadcast(
+            ctx, Codes.action(id, action.ordinal),
+            Intent(ctx, ActionReceiver::class.java).setAction(ACTION_USER)
+                .putExtra(EXTRA_ID, id).putExtra(EXTRA_ACTION, action.name)
+        )
+
+    private fun actionLabel(action: SnoozeMachine.Action, snoozeCount: Int): String = when (action) {
+        SnoozeMachine.Action.SNOOZE_5 -> "5 dk ertele"
+        SnoozeMachine.Action.SNOOZE_10 ->
+            if (snoozeCount >= SnoozeMachine.MAX_SNOOZES) "10 dk daha ertele" else "10 dk ertele"
+        SnoozeMachine.Action.DONE -> "Tamam, yaptım (bir daha gönderme)"
+    }
+
+    @SuppressLint("MissingPermission")
+    fun post(ctx: Context, r: Reminder, stage: Int, settings: Settings, silent: Boolean = false) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) return
+        ensureChannels(ctx)
+
+        val tone = Tone.forAge(settings.age)
+        val name = settings.name
+        val seed = r.id + stage
+        val nagging = stage == 2 && r.snoozeCount >= SnoozeMachine.MAX_SNOOZES
+        val title: String
+        val body: String
+        when {
+            stage == 0 -> {
+                title = tone.headsUpTitle(name); body = tone.headsUpBody(r.title, name, seed)
+            }
+            stage == 1 -> {
+                title = tone.mainTitle(name); body = tone.mainBody(r.title, name, seed)
+            }
+            nagging -> {
+                title = tone.nagTitle(name); body = tone.nagBody(r.title, name, seed)
+            }
+            else -> {
+                title = tone.checkTitle(name); body = tone.checkBody(r.title, name, seed)
+            }
+        }
+        val big = if (r.notes.isBlank()) body else "$body\n${r.notes}"
+
+        val b = NotificationCompat.Builder(ctx, Sounds.channelId(r.sound))
+            .setSmallIcon(R.drawable.ic_notification)
+            .setColor(Color.parseColor("#0B6B66"))
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(big))
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setVibrate(VIBRATION)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setOnlyAlertOnce(silent)
+            .setContentIntent(openApp(ctx, r.id))
+            .setDeleteIntent(repostIntent(ctx, r.id, stage))
+        if (silent) b.setSilent(true)
+        if (stage >= 1) b.setFullScreenIntent(openApp(ctx, r.id), true)
+        if (stage == 2) {
+            // Only snooze / done actions are offered; there is intentionally no plain dismiss.
+            for (a in SnoozeMachine.actions(r.snoozeCount)) {
+                b.addAction(0, actionLabel(a, r.snoozeCount), actionIntent(ctx, r.id, a))
+            }
+        }
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(Codes.notif(r.id, stage), b.build())
+    }
+
+    fun cancel(ctx: Context, id: Int, stage: Int) {
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.cancel(Codes.notif(id, stage))
+    }
+
+    fun cancelAll(ctx: Context, id: Int) {
+        for (stage in 0..2) cancel(ctx, id, stage)
+    }
+}
