@@ -49,13 +49,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.kairos.app.R
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kairos.app.data.Reminder
 import com.kairos.app.data.Settings
-import com.kairos.app.logic.Tone
+import com.kairos.app.logic.ToneSet
 import kotlinx.coroutines.launch
 
 @Composable
@@ -75,7 +77,7 @@ fun KairosRoot(vm: MainViewModel = viewModel()) {
 @Composable
 private fun MainApp(vm: MainViewModel, settings: Settings) {
     val ctx = LocalContext.current
-    val tone = Tone.set
+    val tone = remember(ctx) { ToneSet(ctx) }
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -212,7 +214,7 @@ private fun MainScaffold(
                 exit = scaleOut(tween(DurShort)) + fadeOut(tween(DurShort))
             ) {
                 FloatingActionButton(onClick = onNew) {
-                    Icon(Icons.Default.Add, contentDescription = "Yeni görev")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_new_task))
                 }
             }
         },
@@ -221,17 +223,17 @@ private fun MainScaffold(
                 NavigationBarItem(
                     selected = tab == 0, onClick = { onTab(0) },
                     icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                    label = { Text("Görevler") }
+                    label = { Text(stringResource(R.string.nav_tasks)) }
                 )
                 NavigationBarItem(
                     selected = tab == 1, onClick = { onTab(1) },
                     icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-                    label = { Text("Takvim") }
+                    label = { Text(stringResource(R.string.nav_calendar)) }
                 )
                 NavigationBarItem(
                     selected = tab == 2, onClick = { onTab(2) },
                     icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text("Ayarlar") }
+                    label = { Text(stringResource(R.string.nav_settings)) }
                 )
             }
         },

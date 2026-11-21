@@ -1,0 +1,64 @@
+# Kairos
+
+[English](README.md) | **Türkçe** | [Русский](README.ru.md)
+
+*Görmezden gelmene izin vermeyen, tamamen çevrimdışı bir hatırlatıcı.*
+
+Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Yalnızca bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. Uygulama İngilizce, Rusça ve Türkçe olarak kullanılabilir.
+
+## Durum
+
+- Derleniyor: debug APK derlenir (`:app:assembleDebug`).
+- Birim testleri var: tekrar mantığı, erteleme durum makinesi ve ton varyantı seçimi (`LogicTest`).
+- Emülatörde test edildi: bildirim zinciri (ön uyarı, ana bildirim, kontrol, erteleme düğmeleri) bir Android emülatöründe baştan sona çalıştırıldı.
+- **Henüz gerçek cihazda test edilmedi.** Gerçek pil yönetimi altında tam zamanlı alarmlar, tam ekran bildirimler, sesler ve takvim eşitlemesinin cihaz üzerinde doğrulanması gerekiyor.
+
+## Özellikler
+
+- **Tek samimi ton.** Görev listesindeki karşılama, bildirim metinleri, boş durumlar ve snackbar mesajları aynı net ve samimi sesi kullanır (`logic/Tone.kt`, metinler string kaynaklarından gelir).
+- **Hatırlatma zinciri.** Her hatırlatma, `T` zamanı çevresinde üç bildirim gönderir: **T-10 dk** ön uyarı, **T** anında ana bildirim ve **T+5 dk** "Yaptın mı?" kontrolü.
+- **Kapatılamayan, ısrarcı bildirimler.** Kalıcıdır, otomatik kapanmaz, kapatma düğmesi yoktur, titreşimli en yüksek önemde alarm kanalı kullanır, Rahatsız Etme'yi aşar ve kilit ekranında görünür. Biri kaydırılarak silinirse silme niyeti (delete intent) onu yeniden gönderir. T ve T+5 bildirimleri ayrıca tam ekran niyeti ister.
+- **Yalnızca ertelemeli son bildirim.** T+5 bildirimi yalnızca **5 dk ertele** ve **10 dk ertele** seçeneklerini sunar.
+- **Üç erteleme sonrası.** Yalnızca **"10 dk daha ertele"** veya **"Tamam, yaptım (bir daha gönderme)"** kalır; metin biraz daha kararlı olur.
+- **Hatırlatma başına ses.** 16 hazır ses. Her hatırlatma için birini seç, Ayarlar'da varsayılan belirle, kaydetmeden önce dinle. Her ses kendi bildirim kanalını alır.
+- **Tekrarlar.** Yok, günlük, haftalık (seçilen günler) veya aylık (kısa aylara göre ayarlanır).
+- **Hardcore modu.** İsteğe bağlı. Her hatırlatmayı telefondaki yerel bir "Kairos" takvimine yansıtır (10 dk önce ve tam zamanında alarm), böylece sistem takvimi üzerinden de çalar. Takvim izni gerekir; kapatınca kayıtlar silinir.
+- **Görev ve takvim görünümleri.** Bugün / yaklaşan / tamamlanan listeleri ve gün işaretli aylık takvim. Tarihler, ay ve gün adları ile haftanın ilk günü seçili dile uyar.
+- **Tema seçimi.** Ayarlar'dan sistemi izle, açık veya koyu temayı zorla.
+- **Diller.** İngilizce, Rusça ve Türkçe. Varsayılan olarak Kairos sistem dilini izler; Ayarlar'daki dil bölümü (Sistem / English / Türkçe / Русский) Android'in uygulama başına dil desteğiyle anında uygulanır. Bildirimler ve takvim kayıtları da seçilen dili kullanır.
+- **Tamamen çevrimdışı.** `INTERNET` izni yok, hesap yok, analitik yok. Veriler yerel bir veritabanında kalır.
+
+Kullanılan izinler: bildirimler, tam zamanlı alarm, tam ekran niyeti, açılış tamamlandı (yeniden zamanlamak için), titreşim ve takvim okuma/yazma (yalnızca Hardcore modu).
+
+## Ekran görüntüleri
+
+Bir Android emülatöründe alınmıştır.
+
+| Başlatıcı simgesi | Karşılama | Görevler | Hatırlatma düzenle | Takvim | Ayarlar | Bildirim |
+|---|---|---|---|---|---|---|
+| ![Başlatıcı simgesi](docs/device/00-launcher-icon.png) | ![Karşılama](docs/device/01-onboarding.png) | ![Görevler](docs/device/02-tasks.png) | ![Hatırlatma düzenle](docs/device/03-edit.png) | ![Takvim](docs/device/04-calendar.png) | ![Ayarlar](docs/device/05-settings.png) | ![Bildirim](docs/device/06-notification.png) |
+
+## Derleme
+
+Gereksinimler: JDK 17, Android SDK (compileSdk 35, minSdk 26), Gradle 8.9. Depoda Gradle wrapper yoktur, yerel bir Gradle 8.9 kullan.
+
+```sh
+# Gradle'ı SDK'ya yönlendir (local.properties git tarafından yok sayılır)
+echo "sdk.dir=/path/to/Android/Sdk" > local.properties
+
+gradle :app:testDebugUnitTest     # birim testleri
+gradle :app:assembleDebug         # app/build/outputs/apk/debug/*.apk
+gradle :app:lintDebug             # lint (eksik çeviriler, sabit metinler, ...)
+```
+
+## Yerelleştirme
+
+Kullanıcıya görünen tüm metinler Android string kaynaklarındadır: `app/src/main/res/values/strings.xml` (İngilizce, varsayılan), `values-tr/` (Türkçe) ve `values-ru/` (Rusça). Ton metinleri `%1$s` (ad) ve `%2$s` (görev başlığı) yer tutucularını ve rastgele varyantlar için string dizilerini kullanır. Yeni dil eklemek için `values-xx/strings.xml` ekle, `res/xml/locales_config.xml` içine yaz ve `AppLanguage`'e ekle.
+
+## CI
+
+GitHub Actions (`.github/workflows/android.yml`) her push, pull request ve elle tetiklemede çalışır: Temurin JDK 17, Android SDK, Gradle 8.9, ardından birim testleri ve debug APK derlemesi. APK, `kairos-debug-apk` artifact'i olarak yüklenir.
+
+## Lisans
+
+MIT, bkz. [LICENSE](LICENSE).

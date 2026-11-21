@@ -38,6 +38,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.kairos.app.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -72,6 +75,9 @@ fun CalendarScreen(
     val month = YearMonth.of(monthIndex / 12, monthIndex % 12 + 1)
     val selected = LocalDate.ofEpochDay(selectedEpochDay)
     val today = LocalDate.now()
+    val ctx = LocalContext.current
+    val firstDay = Fmt.firstDayOfWeek(ctx)
+    val weekDays = DayOfWeek.entries.let { all -> all.drop(firstDay.ordinal) + all.take(firstDay.ordinal) }
 
     val dayItems = reminders.filter { occurs(it, selected) }
         .sortedBy { Fmt.local(it.dueAt).toLocalTime() }
@@ -91,7 +97,7 @@ fun CalendarScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 IconButton(onClick = { monthIndex -= 1 }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Önceki ay")
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.cal_prev_month))
                 }
                 AnimatedContent(
                     targetState = monthIndex,
@@ -99,20 +105,20 @@ fun CalendarScreen(
                     label = "monthTitle"
                 ) { mi ->
                     Text(
-                        Fmt.month(YearMonth.of(mi / 12, mi % 12 + 1).atDay(1)),
+                        Fmt.month(ctx, YearMonth.of(mi / 12, mi % 12 + 1).atDay(1)),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
                 IconButton(onClick = { monthIndex += 1 }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Sonraki ay")
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.cal_next_month))
                 }
             }
         }
         item {
             Row(Modifier.fillMaxWidth()) {
-                for (d in DayOfWeek.entries) {
+                for (d in weekDays) {
                     Text(
-                        Fmt.dayShort.getValue(d),
+                        Fmt.dayShort(ctx, d),
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.labelMedium,
@@ -128,7 +134,7 @@ fun CalendarScreen(
                 label = "monthGrid"
             ) { mi ->
             val month = YearMonth.of(mi / 12, mi % 12 + 1)
-            val offset = month.atDay(1).dayOfWeek.value - 1
+            val offset = (month.atDay(1).dayOfWeek.value - firstDay.value + 7) % 7
             val cells: List<LocalDate?> =
                 List<LocalDate?>(offset) { null } + (1..month.lengthOfMonth()).map<Int, LocalDate?> { month.atDay(it) }
             val padded: List<LocalDate?> = cells + List<LocalDate?>((7 - cells.size % 7) % 7) { null }
@@ -158,7 +164,7 @@ fun CalendarScreen(
                 label = "selectedDate",
                 modifier = Modifier.padding(top = 16.dp, start = 4.dp)
             ) { d ->
-                Text(Fmt.date(d), style = MaterialTheme.typography.titleMedium)
+                Text(Fmt.date(ctx, d), style = MaterialTheme.typography.titleMedium)
             }
         }
         if (dayItems.isEmpty()) {
@@ -180,7 +186,7 @@ fun CalendarScreen(
                 ) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            Fmt.time(Fmt.local(r.dueAt)),
+                            Fmt.time(ctx, Fmt.local(r.dueAt)),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )

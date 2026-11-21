@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Kairos" parent="@android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.Kairos" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/kairos_window_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
     <style name="Theme.Kairos.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/kairos_icon_bg</item>

@@ -33,6 +33,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kairos.app.data.AppLanguage
 import com.kairos.app.data.ThemeMode
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.kairos.app.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kairos.app.data.Settings
@@ -90,39 +93,57 @@ fun SettingsScreen(
             ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Ayarlar", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fadeIn(0))
+        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fadeIn(0))
 
-        SettingsSection("Görünüm", 1) {
+        SettingsSection(stringResource(R.string.sec_appearance), 1) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 val modes = listOf(
-                    ThemeMode.SYSTEM to "Sistem",
-                    ThemeMode.LIGHT to "Açık",
-                    ThemeMode.DARK to "Koyu"
+                    ThemeMode.SYSTEM to R.string.theme_system,
+                    ThemeMode.LIGHT to R.string.theme_light,
+                    ThemeMode.DARK to R.string.theme_dark
                 )
-                modes.forEachIndexed { i, (mode, label) ->
+                modes.forEachIndexed { i, (mode, labelRes) ->
                     SegmentedButton(
                         selected = settings.themeMode == mode,
                         onClick = { vm.setThemeMode(mode) },
                         shape = SegmentedButtonDefaults.itemShape(i, modes.size)
-                    ) { Text(label) }
+                    ) { Text(stringResource(labelRes)) }
                 }
             }
         }
 
-        SettingsSection("Profil", 2) {
+        SettingsSection(stringResource(R.string.sec_language), 2) {
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                val langs = listOf(
+                    AppLanguage.SYSTEM to R.string.lang_system,
+                    AppLanguage.ENGLISH to R.string.lang_en,
+                    AppLanguage.TURKISH to R.string.lang_tr,
+                    AppLanguage.RUSSIAN to R.string.lang_ru
+                )
+                langs.forEachIndexed { i, (lang, labelRes) ->
+                    SegmentedButton(
+                        selected = settings.language == lang,
+                        onClick = { vm.setLanguage(lang) },
+                        shape = SegmentedButtonDefaults.itemShape(i, langs.size)
+                    ) { Text(stringResource(labelRes), maxLines = 1) }
+                }
+            }
+        }
+
+        SettingsSection(stringResource(R.string.sec_profile), 3) {
             Text(settings.name, style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Ad yalnızca bu cihazda saklanır.",
+                stringResource(R.string.profile_note),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            OutlinedButton(onClick = { editProfile = true }) { Text("Adı değiştir") }
+            OutlinedButton(onClick = { editProfile = true }) { Text(stringResource(R.string.change_name)) }
         }
 
-        SettingsSection("Hardcore modu", 3) {
+        SettingsSection(stringResource(R.string.sec_hardcore), 4) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Tüm hatırlatmalar telefonun takvimine de yazılır (10 dk önce ve tam zamanında alarm).",
+                    stringResource(R.string.hardcore_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f).padding(end = 12.dp)
@@ -144,9 +165,9 @@ fun SettingsScreen(
             }
         }
 
-        SettingsSection("Sesler", 4) {
+        SettingsSection(stringResource(R.string.sec_sounds), 5) {
             Text(
-                "Varsayılan hatırlatma sesi",
+                stringResource(R.string.default_sound),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -155,22 +176,22 @@ fun SettingsScreen(
                     FilterChip(
                         selected = settings.defaultSound == s.key,
                         onClick = { vm.setDefaultSound(s.key) },
-                        label = { Text(s.label) }
+                        label = { Text(stringResource(s.label)) }
                     )
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { SoundPreview.play(ctx, Sounds.byKey(settings.defaultSound)) }) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = "Sesi dinle")
+                    Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.cd_play_sound))
                 }
-                Text("Önizleme: ${Sounds.byKey(settings.defaultSound).label}")
+                Text(stringResource(R.string.sound_preview, stringResource(Sounds.byKey(settings.defaultSound).label)))
             }
         }
 
-        SettingsSection("İzinler", 5) {
-            PermRow("Bildirimler", perms.notifications) { openPermissionSettings(ctx, PermKind.NOTIFICATIONS) }
-            PermRow("Tam zamanlı alarm", perms.exactAlarm) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
-            PermRow("Tam ekran bildirim", perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
+        SettingsSection(stringResource(R.string.sec_permissions), 6) {
+            PermRow(stringResource(R.string.perm_notifications), perms.notifications) { openPermissionSettings(ctx, PermKind.NOTIFICATIONS) }
+            PermRow(stringResource(R.string.perm_exact_alarm), perms.exactAlarm) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
+            PermRow(stringResource(R.string.perm_full_screen), perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
         }
     }
 
@@ -178,12 +199,12 @@ fun SettingsScreen(
         var name by remember { mutableStateOf(settings.name) }
         AlertDialog(
             onDismissRequest = { editProfile = false },
-            title = { Text("Ad") },
+            title = { Text(stringResource(R.string.name_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = name, onValueChange = { name = it.take(30) },
-                        label = { Text("Ad") }, singleLine = true
+                        label = { Text(stringResource(R.string.name_label)) }, singleLine = true
                     )
                 }
             },
@@ -193,11 +214,11 @@ fun SettingsScreen(
                     onClick = {
                         vm.saveProfile(name.trim())
                         editProfile = false
-                        say(com.kairos.app.logic.Tone.set.snackProfileSaved)
+                        say(tone.snackProfileSaved)
                     }
-                ) { Text("Kaydet") }
+                ) { Text(stringResource(R.string.save)) }
             },
-            dismissButton = { TextButton(onClick = { editProfile = false }) { Text("Vazgeç") } }
+            dismissButton = { TextButton(onClick = { editProfile = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }
@@ -230,11 +251,11 @@ private fun PermRow(label: String, granted: Boolean, onFix: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.bodyLarge)
             Text(
-                if (granted) "Açık" else "Kapalı",
+                stringResource(if (granted) R.string.perm_on else R.string.perm_off),
                 style = MaterialTheme.typography.bodySmall,
                 color = if (granted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
         }
-        TextButton(onClick = onFix) { Text(if (granted) "Ayarlar" else "İzin ver") }
+        TextButton(onClick = onFix) { Text(stringResource(if (granted) R.string.perm_settings else R.string.perm_grant)) }
     }
 }

@@ -18,7 +18,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.kairos.app.R
 
 /** First-launch screen: asks only for a name, stored on-device. */
 @Composable
@@ -33,10 +35,10 @@ fun OnboardingScreen(onDone: (name: String) -> Unit) {
             .padding(horizontal = 28.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Kairos", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fadeIn(0))
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fadeIn(0))
         Spacer(Modifier.height(8.dp))
         Text(
-            "Doğru an geldiğinde hatırlatırım. Önce adını öğreneyim.",
+            stringResource(R.string.onb_intro),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.fadeIn(1)
         )
@@ -44,13 +46,13 @@ fun OnboardingScreen(onDone: (name: String) -> Unit) {
         OutlinedTextField(
             value = name,
             onValueChange = { name = it.take(30) },
-            label = { Text("Adın") },
+            label = { Text(stringResource(R.string.onb_name_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().fadeIn(2)
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            "Adın yalnızca bu cihazda saklanır, hiçbir yere gönderilmez.",
+            stringResource(R.string.onb_privacy),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -59,6 +61,6 @@ fun OnboardingScreen(onDone: (name: String) -> Unit) {
             onClick = { onDone(name.trim()) },
             enabled = valid,
             modifier = Modifier.fillMaxWidth().fadeIn(3)
-        ) { Text("Başla") }
+        ) { Text(stringResource(R.string.onb_start)) }
     }
 }

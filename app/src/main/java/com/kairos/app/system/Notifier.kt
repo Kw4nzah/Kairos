@@ -18,7 +18,7 @@ import com.kairos.app.R
 import com.kairos.app.data.Reminder
 import com.kairos.app.data.Settings
 import com.kairos.app.logic.SnoozeMachine
-import com.kairos.app.logic.Tone
+import com.kairos.app.logic.ToneSet
 
 /**
  * Posts the notification chain. Every notification is deliberately sticky: ongoing, not auto-cancelled,
@@ -36,9 +36,9 @@ object Notifier {
             .build()
         for (s in Sounds.all) {
             val ch = NotificationChannel(
-                Sounds.channelId(s.key), "Kairos - ${s.label}", NotificationManager.IMPORTANCE_HIGH
+                Sounds.channelId(s.key), ctx.getString(R.string.channel_name, s.name(ctx)), NotificationManager.IMPORTANCE_HIGH
             )
-            ch.description = "Hatırlatmalar (${s.label} sesi)"
+            ch.description = ctx.getString(R.string.channel_desc, s.name(ctx))
             ch.setSound(Sounds.uri(ctx, s), attrs)
             ch.enableVibration(true)
             ch.vibrationPattern = VIBRATION
@@ -77,22 +77,27 @@ object Notifier {
                 .putExtra(EXTRA_ID, id).putExtra(EXTRA_ACTION, action.name)
         )
 
-    private fun actionLabel(action: SnoozeMachine.Action, snoozeCount: Int): String = when (action) {
-        SnoozeMachine.Action.SNOOZE_5 -> "5 dk ertele"
-        SnoozeMachine.Action.SNOOZE_10 ->
-            if (snoozeCount >= SnoozeMachine.MAX_SNOOZES) "10 dk daha ertele" else "10 dk ertele"
-        SnoozeMachine.Action.DONE -> "Tamam, yaptım (bir daha gönderme)"
-    }
+    private fun actionLabel(ctx: Context, action: SnoozeMachine.Action, snoozeCount: Int): String = ctx.getString(
+        when (action) {
+            SnoozeMachine.Action.SNOOZE_5 -> R.string.action_snooze_5
+            SnoozeMachine.Action.SNOOZE_10 ->
+                if (snoozeCount >= SnoozeMachine.MAX_SNOOZES) R.string.action_snooze_10_more
+                else R.string.action_snooze_10
+            SnoozeMachine.Action.DONE -> R.string.action_done
+        }
+    )
 
     @SuppressLint("MissingPermission")
-    fun post(ctx: Context, r: Reminder, stage: Int, settings: Settings, silent: Boolean = false) {
+    fun post(baseCtx: Context, r: Reminder, stage: Int, settings: Settings, silent: Boolean = false) {
+        // Receivers run outside the Activity, so build a context for the language chosen in settings.
+        val ctx = Locales.localized(baseCtx, settings.language)
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) return
         ensureChannels(ctx)
 
-        val tone = Tone.set
+        val tone = ToneSet(ctx)
         val name = settings.name
         val seed = r.id + stage
         val nagging = stage == 2 && r.snoozeCount >= SnoozeMachine.MAX_SNOOZES
@@ -134,7 +139,7 @@ object Notifier {
         if (stage == 2) {
             // Only snooze / done actions are offered; there is intentionally no plain dismiss.
             for (a in SnoozeMachine.actions(r.snoozeCount)) {
-                b.addAction(0, actionLabel(a, r.snoozeCount), actionIntent(ctx, r.id, a))
+                b.addAction(0, actionLabel(ctx, a, r.snoozeCount), actionIntent(ctx, r.id, a))
             }
         }
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

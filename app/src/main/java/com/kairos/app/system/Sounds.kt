@@ -4,30 +4,33 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.annotation.RawRes
+import androidx.annotation.StringRes
 import com.kairos.app.R
 
-data class Sound(val key: String, val label: String, @RawRes val res: Int)
+data class Sound(val key: String, @StringRes val label: Int, @RawRes val res: Int) {
+    fun name(ctx: Context): String = ctx.getString(label)
+}
 
 object Sounds {
     const val DEFAULT_KEY = "bell"
 
     val all: List<Sound> = listOf(
-        Sound("ack", "Ack", R.raw.ack),
-        Sound("amogus", "Amogus", R.raw.amogus),
-        Sound("applepay", "Apple Pay", R.raw.applepay),
-        Sound("bell", "Zil", R.raw.bell),
-        Sound("bruh", "Bruh", R.raw.bruh),
-        Sound("dexter", "Dexter", R.raw.dexter),
-        Sound("duck", "Ördek", R.raw.duck),
-        Sound("enrique", "Enrique", R.raw.enrique),
-        Sound("heehee", "Hehe", R.raw.heehee),
-        Sound("meow", "Miyav", R.raw.meow),
-        Sound("metal_pipe", "Metal boru", R.raw.metal_pipe),
-        Sound("prowler", "Prowler", R.raw.prowler),
-        Sound("rizz", "Rizz", R.raw.rizz),
-        Sound("saxophone", "Saksafon", R.raw.saxophone),
-        Sound("spiderman", "Spiderman", R.raw.spiderman),
-        Sound("spongebob", "Sünger Bob", R.raw.spongebob)
+        Sound("ack", R.string.sound_ack, R.raw.ack),
+        Sound("amogus", R.string.sound_amogus, R.raw.amogus),
+        Sound("applepay", R.string.sound_applepay, R.raw.applepay),
+        Sound("bell", R.string.sound_bell, R.raw.bell),
+        Sound("bruh", R.string.sound_bruh, R.raw.bruh),
+        Sound("dexter", R.string.sound_dexter, R.raw.dexter),
+        Sound("duck", R.string.sound_duck, R.raw.duck),
+        Sound("enrique", R.string.sound_enrique, R.raw.enrique),
+        Sound("heehee", R.string.sound_heehee, R.raw.heehee),
+        Sound("meow", R.string.sound_meow, R.raw.meow),
+        Sound("metal_pipe", R.string.sound_metal_pipe, R.raw.metal_pipe),
+        Sound("prowler", R.string.sound_prowler, R.raw.prowler),
+        Sound("rizz", R.string.sound_rizz, R.raw.rizz),
+        Sound("saxophone", R.string.sound_saxophone, R.raw.saxophone),
+        Sound("spiderman", R.string.sound_spiderman, R.raw.spiderman),
+        Sound("spongebob", R.string.sound_spongebob, R.raw.spongebob)
     )
 
     fun byKey(key: String): Sound =

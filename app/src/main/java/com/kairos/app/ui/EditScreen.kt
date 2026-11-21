@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,6 +38,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.kairos.app.R
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +55,7 @@ import com.kairos.app.logic.RepeatType
 import com.kairos.app.system.Sounds
 import com.kairos.app.system.SoundPreview
 import java.time.DayOfWeek
+import android.text.format.DateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -57,10 +63,10 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 
 private val repeatOptions = listOf(
-    RepeatType.NONE to "Yok",
-    RepeatType.DAILY to "Her gün",
-    RepeatType.WEEKLY to "Haftalık",
-    RepeatType.MONTHLY to "Aylık"
+    RepeatType.NONE to R.string.repeat_none,
+    RepeatType.DAILY to R.string.repeat_daily,
+    RepeatType.WEEKLY to R.string.repeat_weekly,
+    RepeatType.MONTHLY to R.string.repeat_monthly
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -95,20 +101,46 @@ fun EditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (existing == null) "Yeni görev" else "Görevi düzenle") },
+                title = { Text(stringResource(if (existing == null) R.string.edit_title_new else R.string.edit_title_edit)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     if (existing != null) {
                         IconButton(onClick = { confirmDelete = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Sil")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_delete))
                         }
                     }
                 }
             )
+        },
+        bottomBar = {
+            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Button(
+                        onClick = {
+                            val due = Fmt.toMillis(LocalDateTime.of(date, time))
+                            val weekly = if (repeat == RepeatType.WEEKLY) mask and 0x7F else 0
+                            val base = existing ?: Reminder(title = "", dueAt = due)
+                            onSave(
+                                base.copy(
+                                    title = title.trim(),
+                                    notes = notes.trim(),
+                                    dueAt = due,
+                                    repeatType = repeat.name,
+                                    weekdays = weekly,
+                                    sound = sound,
+                                    // Moving a finished one-off to a new time reopens it.
+                                    done = base.done && due == base.dueAt,
+                                    doneAt = if (base.done && due == base.dueAt) base.doneAt else null
+                                )
+                            )
+                        },
+                        enabled = title.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(stringResource(R.string.save)) }
+            }
         }
     ) { padding ->
         Column(
@@ -121,32 +153,32 @@ fun EditScreen(
         ) {
             OutlinedTextField(
                 value = title, onValueChange = { title = it },
-                label = { Text("Başlık") }, singleLine = true,
+                label = { Text(stringResource(R.string.field_title)) }, singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = notes, onValueChange = { notes = it },
-                label = { Text("Notlar") }, minLines = 3,
+                label = { Text(stringResource(R.string.field_notes)) }, minLines = 3,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("Zaman", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.label_time), style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { showDate = true }, modifier = Modifier.weight(1f)) {
-                    Text(Fmt.date(date), maxLines = 1)
+                    Text(Fmt.date(ctx, date), maxLines = 1)
                 }
                 OutlinedButton(onClick = { showTime = true }) {
-                    Text(Fmt.time(LocalDateTime.of(date, time)))
+                    Text(Fmt.time(ctx, LocalDateTime.of(date, time)))
                 }
             }
 
-            Text("Tekrar", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.label_repeat), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for ((type, label) in repeatOptions) {
+                for ((type, labelRes) in repeatOptions) {
                     FilterChip(
                         selected = repeat == type,
                         onClick = { repeat = type },
-                        label = { Text(label) }
+                        label = { Text(stringResource(labelRes)) }
                     )
                 }
             }
@@ -156,53 +188,29 @@ fun EditScreen(
                         FilterChip(
                             selected = Recurrence.has(mask, day),
                             onClick = { mask = mask xor Recurrence.bit(day) },
-                            label = { Text(Fmt.dayShort.getValue(day)) }
+                            label = { Text(Fmt.dayShort(ctx, day)) }
                         )
                     }
                 }
             }
 
-            Text("Ses", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.label_sound), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (s in Sounds.all) {
                     FilterChip(
                         selected = sound == s.key,
                         onClick = { sound = s.key },
-                        label = { Text(s.label) }
+                        label = { Text(stringResource(s.label)) }
                     )
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { SoundPreview.play(ctx, Sounds.byKey(sound)) }) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = "Sesi dinle")
+                    Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.cd_play_sound))
                 }
-                Text("Önizleme: ${Sounds.byKey(sound).label}", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.sound_preview, stringResource(Sounds.byKey(sound).label)), style = MaterialTheme.typography.bodyMedium)
             }
 
-            Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = {
-                    val due = Fmt.toMillis(LocalDateTime.of(date, time))
-                    val weekly = if (repeat == RepeatType.WEEKLY) mask and 0x7F else 0
-                    val base = existing ?: Reminder(title = "", dueAt = due)
-                    onSave(
-                        base.copy(
-                            title = title.trim(),
-                            notes = notes.trim(),
-                            dueAt = due,
-                            repeatType = repeat.name,
-                            weekdays = weekly,
-                            sound = sound,
-                            // Moving a finished one-off to a new time reopens it.
-                            done = base.done && due == base.dueAt,
-                            doneAt = if (base.done && due == base.dueAt) base.doneAt else null
-                        )
-                    )
-                },
-                enabled = title.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Kaydet") }
-            Spacer(Modifier.height(24.dp))
         }
     }
 
@@ -218,23 +226,23 @@ fun EditScreen(
                         date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
                     }
                     showDate = false
-                }) { Text("Tamam") }
+                }) { Text(stringResource(R.string.ok)) }
             },
-            dismissButton = { TextButton(onClick = { showDate = false }) { Text("Vazgeç") } }
+            dismissButton = { TextButton(onClick = { showDate = false }) { Text(stringResource(R.string.cancel)) } }
         ) { DatePicker(state = state) }
     }
 
     if (showTime) {
-        val state = rememberTimePickerState(initialHour = time.hour, initialMinute = time.minute, is24Hour = true)
+        val state = rememberTimePickerState(initialHour = time.hour, initialMinute = time.minute, is24Hour = DateFormat.is24HourFormat(ctx))
         AlertDialog(
             onDismissRequest = { showTime = false },
             confirmButton = {
                 TextButton(onClick = {
                     time = LocalTime.of(state.hour, state.minute)
                     showTime = false
-                }) { Text("Tamam") }
+                }) { Text(stringResource(R.string.ok)) }
             },
-            dismissButton = { TextButton(onClick = { showTime = false }) { Text("Vazgeç") } },
+            dismissButton = { TextButton(onClick = { showTime = false }) { Text(stringResource(R.string.cancel)) } },
             text = { TimePicker(state = state) }
         )
     }
@@ -242,12 +250,12 @@ fun EditScreen(
     if (confirmDelete && existing != null) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Silinsin mi?") },
+            title = { Text(stringResource(R.string.delete_confirm_title)) },
             text = { Text(existing.title) },
             confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onDelete(existing.id) }) { Text("Sil") }
+                TextButton(onClick = { confirmDelete = false; onDelete(existing.id) }) { Text(stringResource(R.string.delete)) }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Vazgeç") } }
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }

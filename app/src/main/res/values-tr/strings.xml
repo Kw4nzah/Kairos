@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation -->
+    <string name="nav_tasks">Görevler</string>
+    <string name="nav_calendar">Takvim</string>
+    <string name="nav_settings">Ayarlar</string>
+    <string name="cd_new_task">Yeni görev</string>
+
+    <!-- Task list -->
+    <string name="section_today">Bugün</string>
+    <string name="section_upcoming">Yaklaşan</string>
+    <string name="section_done">Tamamlanan</string>
+    <string name="fix_permissions">İzinleri düzenle</string>
+
+    <!-- Onboarding -->
+    <string name="onb_intro">Doğru an geldiğinde hatırlatırım. Önce adını öğreneyim.</string>
+    <string name="onb_name_label">Adın</string>
+    <string name="onb_privacy">Adın yalnızca bu cihazda saklanır, hiçbir yere gönderilmez.</string>
+    <string name="onb_start">Başla</string>
+
+    <!-- Edit screen -->
+    <string name="edit_title_new">Yeni görev</string>
+    <string name="edit_title_edit">Görevi düzenle</string>
+    <string name="cd_back">Geri</string>
+    <string name="cd_delete">Sil</string>
+    <string name="field_title">Başlık</string>
+    <string name="field_notes">Notlar</string>
+    <string name="label_time">Zaman</string>
+    <string name="label_repeat">Tekrar</string>
+    <string name="label_sound">Ses</string>
+    <string name="repeat_none">Yok</string>
+    <string name="repeat_daily">Her gün</string>
+    <string name="repeat_weekly">Haftalık</string>
+    <string name="repeat_monthly">Aylık</string>
+    <string name="cd_play_sound">Sesi dinle</string>
+    <string name="sound_preview">Önizleme: %1$s</string>
+    <string name="save">Kaydet</string>
+    <string name="ok">Tamam</string>
+    <string name="cancel">Vazgeç</string>
+    <string name="delete">Sil</string>
+    <string name="delete_confirm_title">Silinsin mi?</string>
+
+    <!-- Calendar -->
+    <string name="cal_prev_month">Önceki ay</string>
+    <string name="cal_next_month">Sonraki ay</string>
+
+    <!-- Date and repeat helpers -->
+    <string name="day_today">Bugün</string>
+    <string name="day_tomorrow">Yarın</string>
+    <string name="repeat_label_none">Tekrar yok</string>
+    <string name="repeat_label_daily">Her gün</string>
+    <string name="repeat_label_weekly">Haftalık</string>
+    <string name="repeat_label_monthly">Her ay</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ayarlar</string>
+    <string name="sec_appearance">Görünüm</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="lang_system">Sistem</string>
+    <string name="sec_profile">Profil</string>
+    <string name="profile_note">Ad yalnızca bu cihazda saklanır.</string>
+    <string name="change_name">Adı değiştir</string>
+    <string name="name_dialog_title">Ad</string>
+    <string name="name_label">Ad</string>
+    <string name="sec_hardcore">Hardcore modu</string>
+    <string name="hardcore_desc">Tüm hatırlatmalar telefonun takvimine de yazılır (10 dk önce ve tam zamanında alarm).</string>
+    <string name="sec_sounds">Sesler</string>
+    <string name="default_sound">Varsayılan hatırlatma sesi</string>
+    <string name="sec_permissions">İzinler</string>
+    <string name="perm_notifications">Bildirimler</string>
+    <string name="perm_exact_alarm">Tam zamanlı alarm</string>
+    <string name="perm_full_screen">Tam ekran bildirim</string>
+    <string name="perm_on">Açık</string>
+    <string name="perm_off">Kapalı</string>
+    <string name="perm_settings">Ayarlar</string>
+    <string name="perm_grant">İzin ver</string>
+
+    <!-- Notifications -->
+    <string name="channel_name">Kairos - %1$s</string>
+    <string name="channel_desc">Hatırlatmalar (%1$s sesi)</string>
+    <string name="action_snooze_5">5 dk ertele</string>
+    <string name="action_snooze_10">10 dk ertele</string>
+    <string name="action_snooze_10_more">10 dk daha ertele</string>
+    <string name="action_done">Tamam, yaptım (bir daha gönderme)</string>
+
+    <!-- Sound names -->
+    <string name="sound_ack">Ack</string>
+    <string name="sound_amogus">Amogus</string>
+    <string name="sound_applepay">Apple Pay</string>
+    <string name="sound_bell">Zil</string>
+    <string name="sound_bruh">Bruh</string>
+    <string name="sound_dexter">Dexter</string>
+    <string name="sound_duck">Ördek</string>
+    <string name="sound_enrique">Enrique</string>
+    <string name="sound_heehee">Hehe</string>
+    <string name="sound_meow">Miyav</string>
+    <string name="sound_metal_pipe">Metal boru</string>
+    <string name="sound_prowler">Prowler</string>
+    <string name="sound_rizz">Rizz</string>
+    <string name="sound_saxophone">Saksafon</string>
+    <string name="sound_spiderman">Spiderman</string>
+    <string name="sound_spongebob">Sünger Bob</string>
+
+    <!-- Tone copy. %1$s = name, %2$s = task title -->
+    <string-array name="tone_greetings">
+        <item>Merhaba %1$s, bugün planın hazır.</item>
+        <item>Tekrar hoş geldin %1$s.</item>
+        <item>%1$s, bugün neler var bakalım.</item>
+    </string-array>
+    <string name="tone_headsup_title">Birazdan başlıyor</string>
+    <string-array name="tone_headsup_bodies">
+        <item>\"%2$s\" için 10 dakika kaldı.</item>
+        <item>%1$s, \"%2$s\" 10 dakika sonra.</item>
+        <item>Hazırlanma vakti: \"%2$s\" 10 dakika sonra.</item>
+    </string-array>
+    <string name="tone_main_title">Şimdi zamanı</string>
+    <string-array name="tone_main_bodies">
+        <item>\"%2$s\" için vakit geldi.</item>
+        <item>%1$s, \"%2$s\" şimdi.</item>
+        <item>\"%2$s\" zamanı.</item>
+    </string-array>
+    <string name="tone_check_title">Yaptın mı?</string>
+    <string-array name="tone_check_bodies">
+        <item>\"%2$s\" işini tamamladın mı?</item>
+        <item>%1$s, \"%2$s\" tamamlandı mı?</item>
+    </string-array>
+    <string name="tone_nag_title">Bunu bitirelim</string>
+    <string-array name="tone_nag_bodies">
+        <item>\"%2$s\" üç kez ertelendi. Şimdi bitirmeye ne dersin?</item>
+        <item>%1$s, \"%2$s\" hâlâ açık. Tamamlayıp kapatalım.</item>
+    </string-array>
+    <string name="tone_empty_today">Bugün için bekleyen görev yok.</string>
+    <string name="tone_empty_upcoming">Yaklaşan görev yok.</string>
+    <string name="tone_empty_done">Henüz tamamlanan görev yok.</string>
+    <string name="tone_empty_day">Bu gün için görev yok.</string>
+    <string name="tone_snack_added">Görev kaydedildi.</string>
+    <string name="tone_snack_updated">Görev güncellendi.</string>
+    <string name="tone_snack_deleted">Görev silindi.</string>
+    <string name="tone_snack_done">Tamamlandı olarak işaretlendi.</string>
+    <string name="tone_snack_reopened">Görev yeniden açıldı.</string>
+    <string name="tone_snack_hardcore_on">Hardcore modu açık. Hatırlatmalar takvime de işlenecek.</string>
+    <string name="tone_snack_hardcore_off">Hardcore modu kapatıldı. Takvim kayıtları kaldırıldı.</string>
+    <string name="tone_snack_calendar_denied">Takvim izni verilmedi, Hardcore modu açılamadı.</string>
+    <string name="tone_snack_profile_saved">Adın güncellendi.</string>
+    <string name="tone_permission_banner">Bazı izinler eksik. Hatırlatmaların aksamaması için Ayarlar\'dan tamamla.</string>
+</resources>

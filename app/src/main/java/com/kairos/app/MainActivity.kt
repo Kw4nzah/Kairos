@@ -2,7 +2,7 @@ package com.kairos.app
 
 import android.graphics.Color
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,7 +17,7 @@ import com.kairos.app.ui.KairosRoot
 import com.kairos.app.ui.KairosTheme
 import com.kairos.app.ui.MainViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val vm: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
         splash.setOnExitAnimationListener { provider ->
             provider.view.animate().alpha(0f).setDuration(220).withEndAction { provider.remove() }.start()
         }
+        vm.syncLanguageFromSystem()
         enableEdgeToEdge()
         setContent {
             val settings by vm.settings.collectAsStateWithLifecycle()

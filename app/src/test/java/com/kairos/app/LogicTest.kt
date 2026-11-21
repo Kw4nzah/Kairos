@@ -93,11 +93,13 @@ class LogicTest {
 
     // ---- Tone ----
 
-    @Test fun toneTextsAreFilled() {
-        val t = Tone.set
-        assertTrue(t.allTexts().all { it.isNotBlank() })
-        assertTrue(t.mainBody("Su ic", "Ali", 0).contains("Su ic"))
-        assertFalse(t.greeting("Ali", 1).contains("{name}"))
-        assertFalse(t.nagBody("Su ic", "Ali", 1).contains("{title}"))
+    @Test fun toneVariantPickingIsStableAndInRange() {
+        for (seed in -50..50) {
+            val i = Tone.pickIndex(3, seed)
+            assertTrue(i in 0..2)
+            assertEquals(i, Tone.pickIndex(3, seed))
+        }
+        assertEquals(1, Tone.pickIndex(3, 1))
+        assertEquals(2, Tone.pickIndex(3, -1))
     }
 }

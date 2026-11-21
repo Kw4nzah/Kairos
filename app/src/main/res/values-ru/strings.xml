@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation -->
+    <string name="nav_tasks">Задачи</string>
+    <string name="nav_calendar">Календарь</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="cd_new_task">Новая задача</string>
+
+    <!-- Task list -->
+    <string name="section_today">Сегодня</string>
+    <string name="section_upcoming">Предстоящие</string>
+    <string name="section_done">Выполненные</string>
+    <string name="fix_permissions">Настроить разрешения</string>
+
+    <!-- Onboarding -->
+    <string name="onb_intro">Я напомню, когда придёт нужный момент. Сначала скажи, как тебя зовут.</string>
+    <string name="onb_name_label">Твоё имя</string>
+    <string name="onb_privacy">Имя хранится только на этом устройстве и никуда не отправляется.</string>
+    <string name="onb_start">Начать</string>
+
+    <!-- Edit screen -->
+    <string name="edit_title_new">Новая задача</string>
+    <string name="edit_title_edit">Редактирование задачи</string>
+    <string name="cd_back">Назад</string>
+    <string name="cd_delete">Удалить</string>
+    <string name="field_title">Название</string>
+    <string name="field_notes">Заметки</string>
+    <string name="label_time">Время</string>
+    <string name="label_repeat">Повтор</string>
+    <string name="label_sound">Звук</string>
+    <string name="repeat_none">Нет</string>
+    <string name="repeat_daily">Каждый день</string>
+    <string name="repeat_weekly">Каждую неделю</string>
+    <string name="repeat_monthly">Каждый месяц</string>
+    <string name="cd_play_sound">Прослушать звук</string>
+    <string name="sound_preview">Прослушивание: %1$s</string>
+    <string name="save">Сохранить</string>
+    <string name="ok">ОК</string>
+    <string name="cancel">Отмена</string>
+    <string name="delete">Удалить</string>
+    <string name="delete_confirm_title">Удалить задачу?</string>
+
+    <!-- Calendar -->
+    <string name="cal_prev_month">Предыдущий месяц</string>
+    <string name="cal_next_month">Следующий месяц</string>
+
+    <!-- Date and repeat helpers -->
+    <string name="day_today">Сегодня</string>
+    <string name="day_tomorrow">Завтра</string>
+    <string name="repeat_label_none">Без повтора</string>
+    <string name="repeat_label_daily">Каждый день</string>
+    <string name="repeat_label_weekly">Каждую неделю</string>
+    <string name="repeat_label_monthly">Каждый месяц</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="sec_appearance">Оформление</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="lang_system">Авто</string>
+    <string name="sec_profile">Профиль</string>
+    <string name="profile_note">Имя хранится только на этом устройстве.</string>
+    <string name="change_name">Изменить имя</string>
+    <string name="name_dialog_title">Имя</string>
+    <string name="name_label">Имя</string>
+    <string name="sec_hardcore">Режим Hardcore</string>
+    <string name="hardcore_desc">Все напоминания также записываются в календарь телефона (сигналы за 10 минут и точно в срок).</string>
+    <string name="sec_sounds">Звуки</string>
+    <string name="default_sound">Звук напоминания по умолчанию</string>
+    <string name="sec_permissions">Разрешения</string>
+    <string name="perm_notifications">Уведомления</string>
+    <string name="perm_exact_alarm">Точные будильники</string>
+    <string name="perm_full_screen">Уведомления на весь экран</string>
+    <string name="perm_on">Включено</string>
+    <string name="perm_off">Выключено</string>
+    <string name="perm_settings">Настройки</string>
+    <string name="perm_grant">Разрешить</string>
+
+    <!-- Notifications -->
+    <string name="channel_name">Kairos - %1$s</string>
+    <string name="channel_desc">Напоминания (звук: %1$s)</string>
+    <string name="action_snooze_5">Отложить на 5 мин</string>
+    <string name="action_snooze_10">Отложить на 10 мин</string>
+    <string name="action_snooze_10_more">Отложить ещё на 10 мин</string>
+    <string name="action_done">Готово, больше не напоминать</string>
+
+    <!-- Sound names -->
+    <string name="sound_ack">Ack</string>
+    <string name="sound_amogus">Amogus</string>
+    <string name="sound_applepay">Apple Pay</string>
+    <string name="sound_bell">Колокольчик</string>
+    <string name="sound_bruh">Bruh</string>
+    <string name="sound_dexter">Dexter</string>
+    <string name="sound_duck">Утка</string>
+    <string name="sound_enrique">Enrique</string>
+    <string name="sound_heehee">Хи-хи</string>
+    <string name="sound_meow">Мяу</string>
+    <string name="sound_metal_pipe">Металлическая труба</string>
+    <string name="sound_prowler">Prowler</string>
+    <string name="sound_rizz">Rizz</string>
+    <string name="sound_saxophone">Саксофон</string>
+    <string name="sound_spiderman">Человек-паук</string>
+    <string name="sound_spongebob">Губка Боб</string>
+
+    <!-- Tone copy. %1$s = name, %2$s = task title -->
+    <string-array name="tone_greetings">
+        <item>Привет, %1$s! План на сегодня готов.</item>
+        <item>С возвращением, %1$s.</item>
+        <item>%1$s, посмотрим, что у нас сегодня.</item>
+    </string-array>
+    <string name="tone_headsup_title">Скоро начало</string>
+    <string-array name="tone_headsup_bodies">
+        <item>До «%2$s» осталось 10 минут.</item>
+        <item>%1$s, «%2$s» через 10 минут.</item>
+        <item>Пора готовиться: «%2$s» через 10 минут.</item>
+    </string-array>
+    <string name="tone_main_title">Самое время</string>
+    <string-array name="tone_main_bodies">
+        <item>Пришло время: «%2$s».</item>
+        <item>%1$s, «%2$s» — прямо сейчас.</item>
+        <item>Время для «%2$s».</item>
+    </string-array>
+    <string name="tone_check_title">Получилось?</string>
+    <string-array name="tone_check_bodies">
+        <item>«%2$s» уже сделано?</item>
+        <item>%1$s, «%2$s» выполнено?</item>
+    </string-array>
+    <string name="tone_nag_title">Давай закончим</string>
+    <string-array name="tone_nag_bodies">
+        <item>«%2$s» отложено уже три раза. Может, завершим прямо сейчас?</item>
+        <item>%1$s, «%2$s» всё ещё не выполнено. Давай завершим и закроем.</item>
+    </string-array>
+    <string name="tone_empty_today">На сегодня задач нет.</string>
+    <string name="tone_empty_upcoming">Предстоящих задач нет.</string>
+    <string name="tone_empty_done">Выполненных задач пока нет.</string>
+    <string name="tone_empty_day">На этот день задач нет.</string>
+    <string name="tone_snack_added">Задача сохранена.</string>
+    <string name="tone_snack_updated">Задача обновлена.</string>
+    <string name="tone_snack_deleted">Задача удалена.</string>
+    <string name="tone_snack_done">Отмечено как выполненное.</string>
+    <string name="tone_snack_reopened">Задача снова открыта.</string>
+    <string name="tone_snack_hardcore_on">Режим Hardcore включён. Напоминания также будут добавляться в календарь.</string>
+    <string name="tone_snack_hardcore_off">Режим Hardcore выключен. Записи в календаре удалены.</string>
+    <string name="tone_snack_calendar_denied">Доступ к календарю не предоставлен, режим Hardcore не включён.</string>
+    <string name="tone_snack_profile_saved">Имя обновлено.</string>
+    <string name="tone_permission_banner">Не хватает некоторых разрешений. Настрой их в настройках, чтобы напоминания не пропускались.</string>
+</resources>

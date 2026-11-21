@@ -1,5 +1,8 @@
 package com.kairos.app.ui
 
+import android.content.Context
+import android.text.format.DateFormat
+import com.kairos.app.R
 import com.kairos.app.data.Reminder
 import com.kairos.app.logic.Recurrence
 import com.kairos.app.logic.RepeatType
@@ -9,50 +12,63 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 import java.util.Locale
 
-/** Turkish display helpers. */
+/** Display helpers. Everything is formatted for the locale of the given context. */
 object Fmt {
-    val TR: Locale = Locale.forLanguageTag("tr-TR")
-    private val dateFmt = DateTimeFormatter.ofPattern("d MMMM yyyy, EEEE", TR)
-    private val shortDateFmt = DateTimeFormatter.ofPattern("d MMM", TR)
-    private val monthFmt = DateTimeFormatter.ofPattern("MMMM yyyy", TR)
-    private val timeFmt = DateTimeFormatter.ofPattern("HH:mm", TR)
+    fun locale(ctx: Context): Locale = ctx.resources.configuration.locales[0]
 
-    val dayShort = mapOf(
-        DayOfWeek.MONDAY to "Pzt", DayOfWeek.TUESDAY to "Sal", DayOfWeek.WEDNESDAY to "Çar",
-        DayOfWeek.THURSDAY to "Per", DayOfWeek.FRIDAY to "Cum", DayOfWeek.SATURDAY to "Cmt",
-        DayOfWeek.SUNDAY to "Paz"
-    )
+    fun dayShort(ctx: Context, d: DayOfWeek): String {
+        val l = locale(ctx)
+        return d.getDisplayName(TextStyle.SHORT, l).replaceFirstChar { it.titlecase(l) }
+    }
+
+    /** First day of the week for the active locale (calendar grid column order). */
+    fun firstDayOfWeek(ctx: Context): DayOfWeek = WeekFields.of(locale(ctx)).firstDayOfWeek
 
     fun local(ms: Long): LocalDateTime = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalDateTime()
     fun toMillis(dt: LocalDateTime): Long = dt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-    fun date(d: LocalDate): String = dateFmt.format(d)
-    fun month(d: LocalDate): String = monthFmt.format(d).replaceFirstChar { it.titlecase(TR) }
-    fun time(dt: LocalDateTime): String = timeFmt.format(dt)
+    fun date(ctx: Context, d: LocalDate): String =
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale(ctx)).format(d)
 
-    fun repeatLabel(type: RepeatType, mask: Int): String = when (type) {
-        RepeatType.NONE -> "Tekrar yok"
-        RepeatType.DAILY -> "Her gün"
-        RepeatType.MONTHLY -> "Her ay"
+    fun month(ctx: Context, d: LocalDate): String {
+        val l = locale(ctx)
+        return DateTimeFormatter.ofPattern("LLLL yyyy", l).format(d).replaceFirstChar { it.titlecase(l) }
+    }
+
+    fun time(ctx: Context, dt: LocalDateTime): String {
+        val l = locale(ctx)
+        val f = if (DateFormat.is24HourFormat(ctx)) DateTimeFormatter.ofPattern("HH:mm", l)
+        else DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(l)
+        return f.format(dt)
+    }
+
+    fun repeatLabel(ctx: Context, type: RepeatType, mask: Int): String = when (type) {
+        RepeatType.NONE -> ctx.getString(R.string.repeat_label_none)
+        RepeatType.DAILY -> ctx.getString(R.string.repeat_label_daily)
+        RepeatType.MONTHLY -> ctx.getString(R.string.repeat_label_monthly)
         RepeatType.WEEKLY -> {
             val days = DayOfWeek.entries.filter { Recurrence.has(mask, it) }
-            if (days.isEmpty()) "Haftalık" else days.joinToString(", ") { dayShort.getValue(it) }
+            if (days.isEmpty()) ctx.getString(R.string.repeat_label_weekly)
+            else days.joinToString(", ") { dayShort(ctx, it) }
         }
     }
 
     /** One-line subtitle for a list row. */
-    fun subtitle(r: Reminder): String {
+    fun subtitle(ctx: Context, r: Reminder): String {
         val dt = local(r.dueAt)
         val today = LocalDate.now()
         val day = when (dt.toLocalDate()) {
-            today -> "Bugün"
-            today.plusDays(1) -> "Yarın"
-            else -> shortDateFmt.format(dt)
+            today -> ctx.getString(R.string.day_today)
+            today.plusDays(1) -> ctx.getString(R.string.day_tomorrow)
+            else -> DateTimeFormatter.ofPattern("d MMM", locale(ctx)).format(dt)
         }
         val type = RepeatType.parse(r.repeatType)
-        val base = "$day ${time(dt)}"
-        return if (type == RepeatType.NONE) base else "$base · ${repeatLabel(type, r.weekdays)}"
+        val base = "$day ${time(ctx, dt)}"
+        return if (type == RepeatType.NONE) base else "$base · ${repeatLabel(ctx, type, r.weekdays)}"
     }
 }

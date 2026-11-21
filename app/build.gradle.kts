@@ -30,6 +30,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    // Keep all languages in every split so the in-app language switch works for Play bundles.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
     buildFeatures {
         compose = true
     }
@@ -37,6 +43,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

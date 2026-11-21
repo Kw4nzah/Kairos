@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.kairos.app.R
 
 
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,9 @@ fun TasksScreen(
     val ctx = LocalContext.current
     val perms = rememberPerms()
     val today = LocalDate.now()
+    val titleToday = stringResource(R.string.section_today)
+    val titleUpcoming = stringResource(R.string.section_upcoming)
+    val titleDone = stringResource(R.string.section_done)
     val open = reminders.filter { !it.done }
     val dueToday = open.filter { !Fmt.local(it.dueAt).toLocalDate().isAfter(today) }
     val upcoming = open.filter { Fmt.local(it.dueAt).toLocalDate().isAfter(today) }
@@ -81,14 +86,14 @@ fun TasksScreen(
                                 else -> PermKind.FULL_SCREEN
                             }
                             openPermissionSettings(ctx, kind)
-                        }) { Text("İzinleri düzenle") }
+                        }) { Text(stringResource(R.string.fix_permissions)) }
                     }
                 }
             }
         }
-        section("Bugün", dueToday, tone.emptyToday, onToggle, onOpen)
-        section("Yaklaşan", upcoming, tone.emptyUpcoming, onToggle, onOpen)
-        section("Tamamlanan", done, tone.emptyDone, onToggle, onOpen)
+        section(titleToday, dueToday, tone.emptyToday, onToggle, onOpen)
+        section(titleUpcoming, upcoming, tone.emptyUpcoming, onToggle, onOpen)
+        section(titleDone, done, tone.emptyDone, onToggle, onOpen)
     }
 }
 
@@ -133,6 +138,7 @@ fun ReminderRow(
     onOpen: (Reminder) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val ctx = LocalContext.current
     val source = remember { MutableInteractionSource() }
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
@@ -149,7 +155,7 @@ fun ReminderRow(
                     maxLines = 2
                 )
                 Text(
-                    Fmt.subtitle(r),
+                    Fmt.subtitle(ctx, r),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

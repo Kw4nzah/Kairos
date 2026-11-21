@@ -19,11 +19,23 @@ enum class ThemeMode {
     }
 }
 
+/** In-app language choice. SYSTEM follows the device (or per-app system setting). */
+enum class AppLanguage(val tag: String) {
+    SYSTEM(""), ENGLISH("en"), TURKISH("tr"), RUSSIAN("ru");
+
+    companion object {
+        fun parse(raw: String?): AppLanguage = entries.firstOrNull { it.name == raw } ?: SYSTEM
+        fun fromTags(tags: String): AppLanguage =
+            entries.firstOrNull { it != SYSTEM && tags.startsWith(it.tag) } ?: SYSTEM
+    }
+}
+
 data class Settings(
     val name: String = "",
     val defaultSound: String = Sounds.DEFAULT_KEY,
     val hardcore: Boolean = false,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val language: AppLanguage = AppLanguage.SYSTEM
 ) {
     val onboarded: Boolean get() = name.isNotBlank()
 }
@@ -37,7 +49,8 @@ class Prefs(context: Context) {
             name = p[NAME] ?: "",
             defaultSound = p[SOUND] ?: Sounds.DEFAULT_KEY,
             hardcore = p[HARDCORE] ?: false,
-            themeMode = ThemeMode.parse(p[THEME])
+            themeMode = ThemeMode.parse(p[THEME]),
+            language = AppLanguage.parse(p[LANGUAGE])
         )
     }
 
@@ -59,7 +72,12 @@ class Prefs(context: Context) {
         store.edit { it[THEME] = mode.name }
     }
 
+    suspend fun setLanguage(lang: AppLanguage) {
+        store.edit { it[LANGUAGE] = lang.name }
+    }
+
     private companion object {
+        val LANGUAGE = stringPreferencesKey("language")
         val THEME = stringPreferencesKey("theme_mode")
         val NAME = stringPreferencesKey("name")
         val SOUND = stringPreferencesKey("default_sound")

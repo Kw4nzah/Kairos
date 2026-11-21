@@ -1,4 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Kairos</string>
+    <string name="app_name" translatable="false">Kairos</string>
+
+    <!-- Navigation -->
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_settings">Settings</string>
+    <string name="cd_new_task">New task</string>
+
+    <!-- Task list -->
+    <string name="section_today">Today</string>
+    <string name="section_upcoming">Upcoming</string>
+    <string name="section_done">Completed</string>
+    <string name="fix_permissions">Fix permissions</string>
+
+    <!-- Onboarding -->
+    <string name="onb_intro">I\'ll remind you when the moment comes. First, tell me your name.</string>
+    <string name="onb_name_label">Your name</string>
+    <string name="onb_privacy">Your name is stored only on this device and never sent anywhere.</string>
+    <string name="onb_start">Start</string>
+
+    <!-- Edit screen -->
+    <string name="edit_title_new">New task</string>
+    <string name="edit_title_edit">Edit task</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_delete">Delete</string>
+    <string name="field_title">Title</string>
+    <string name="field_notes">Notes</string>
+    <string name="label_time">Time</string>
+    <string name="label_repeat">Repeat</string>
+    <string name="label_sound">Sound</string>
+    <string name="repeat_none">None</string>
+    <string name="repeat_daily">Every day</string>
+    <string name="repeat_weekly">Weekly</string>
+    <string name="repeat_monthly">Monthly</string>
+    <string name="cd_play_sound">Play sound</string>
+    <string name="sound_preview">Preview: %1$s</string>
+    <string name="save">Save</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="delete_confirm_title">Delete this task?</string>
+
+    <!-- Calendar -->
+    <string name="cal_prev_month">Previous month</string>
+    <string name="cal_next_month">Next month</string>
+
+    <!-- Date and repeat helpers -->
+    <string name="day_today">Today</string>
+    <string name="day_tomorrow">Tomorrow</string>
+    <string name="repeat_label_none">No repeat</string>
+    <string name="repeat_label_daily">Every day</string>
+    <string name="repeat_label_weekly">Weekly</string>
+    <string name="repeat_label_monthly">Every month</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="sec_appearance">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="sec_language" translatable="false">Dil / Language / Язык</string>
+    <string name="lang_system">System</string>
+    <string name="lang_en" translatable="false">English</string>
+    <string name="lang_tr" translatable="false">Türkçe</string>
+    <string name="lang_ru" translatable="false">Русский</string>
+    <string name="sec_profile">Profile</string>
+    <string name="profile_note">Your name is stored only on this device.</string>
+    <string name="change_name">Change name</string>
+    <string name="name_dialog_title">Name</string>
+    <string name="name_label">Name</string>
+    <string name="sec_hardcore">Hardcore mode</string>
+    <string name="hardcore_desc">All reminders are also written to your phone\'s calendar (alarms 10 minutes before and at the exact time).</string>
+    <string name="sec_sounds">Sounds</string>
+    <string name="default_sound">Default reminder sound</string>
+    <string name="sec_permissions">Permissions</string>
+    <string name="perm_notifications">Notifications</string>
+    <string name="perm_exact_alarm">Exact alarms</string>
+    <string name="perm_full_screen">Full-screen notifications</string>
+    <string name="perm_on">On</string>
+    <string name="perm_off">Off</string>
+    <string name="perm_settings">Settings</string>
+    <string name="perm_grant">Allow</string>
+
+    <!-- Notifications -->
+    <string name="channel_name">Kairos - %1$s</string>
+    <string name="channel_desc">Reminders (%1$s sound)</string>
+    <string name="action_snooze_5">Snooze 5 min</string>
+    <string name="action_snooze_10">Snooze 10 min</string>
+    <string name="action_snooze_10_more">Snooze 10 more min</string>
+    <string name="action_done">Done, don\'t notify again</string>
+
+    <!-- Sound names -->
+    <string name="sound_ack">Ack</string>
+    <string name="sound_amogus">Amogus</string>
+    <string name="sound_applepay">Apple Pay</string>
+    <string name="sound_bell">Bell</string>
+    <string name="sound_bruh">Bruh</string>
+    <string name="sound_dexter">Dexter</string>
+    <string name="sound_duck">Duck</string>
+    <string name="sound_enrique">Enrique</string>
+    <string name="sound_heehee">Hee-hee</string>
+    <string name="sound_meow">Meow</string>
+    <string name="sound_metal_pipe">Metal pipe</string>
+    <string name="sound_prowler">Prowler</string>
+    <string name="sound_rizz">Rizz</string>
+    <string name="sound_saxophone">Saxophone</string>
+    <string name="sound_spiderman">Spider-Man</string>
+    <string name="sound_spongebob">SpongeBob</string>
+
+    <!-- Tone copy. %1$s = name, %2$s = task title -->
+    <string-array name="tone_greetings">
+        <item>Hi %1$s, your plan for today is ready.</item>
+        <item>Welcome back, %1$s.</item>
+        <item>%1$s, let\'s see what\'s on today.</item>
+    </string-array>
+    <string name="tone_headsup_title">Starting soon</string>
+    <string-array name="tone_headsup_bodies">
+        <item>10 minutes until \"%2$s\".</item>
+        <item>%1$s, \"%2$s\" is in 10 minutes.</item>
+        <item>Time to get ready: \"%2$s\" in 10 minutes.</item>
+    </string-array>
+    <string name="tone_main_title">It\'s time</string>
+    <string-array name="tone_main_bodies">
+        <item>It\'s time for \"%2$s\".</item>
+        <item>%1$s, \"%2$s\" is now.</item>
+        <item>Time for \"%2$s\".</item>
+    </string-array>
+    <string name="tone_check_title">Did you do it?</string>
+    <string-array name="tone_check_bodies">
+        <item>Did you finish \"%2$s\"?</item>
+        <item>%1$s, is \"%2$s\" done?</item>
+    </string-array>
+    <string name="tone_nag_title">Let\'s finish this</string>
+    <string-array name="tone_nag_bodies">
+        <item>\"%2$s\" has been snoozed three times. How about finishing it now?</item>
+        <item>%1$s, \"%2$s\" is still open. Let\'s complete it and close it.</item>
+    </string-array>
+    <string name="tone_empty_today">Nothing pending for today.</string>
+    <string name="tone_empty_upcoming">No upcoming tasks.</string>
+    <string name="tone_empty_done">No completed tasks yet.</string>
+    <string name="tone_empty_day">No tasks for this day.</string>
+    <string name="tone_snack_added">Task saved.</string>
+    <string name="tone_snack_updated">Task updated.</string>
+    <string name="tone_snack_deleted">Task deleted.</string>
+    <string name="tone_snack_done">Marked as done.</string>
+    <string name="tone_snack_reopened">Task reopened.</string>
+    <string name="tone_snack_hardcore_on">Hardcore mode is on. Reminders will also be added to the calendar.</string>
+    <string name="tone_snack_hardcore_off">Hardcore mode is off. Calendar entries were removed.</string>
+    <string name="tone_snack_calendar_denied">Calendar permission was not granted, so Hardcore mode could not be turned on.</string>
+    <string name="tone_snack_profile_saved">Name updated.</string>
+    <string name="tone_permission_banner">Some permissions are missing. Finish setting them up in Settings so reminders aren\'t missed.</string>
 </resources>
