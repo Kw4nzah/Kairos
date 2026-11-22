@@ -183,4 +183,6 @@
     <string name="onb_perm_xiaomi">Arka planda açılır pencere ve kilit ekranına izin ver</string>
     <string name="onb_perm_later">Bunların hepsini sonra Ayarlar\'dan değiştirebilirsin.</string>
     <string name="onb_finish">Başlayalım</string>
+    <string name="perm_screen_on">Ekranı açma</string>
+    <string name="onb_perm_screen_on">Alarm çalınca ekranı uyandırmak için</string>
 </resources>

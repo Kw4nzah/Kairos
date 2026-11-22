@@ -189,4 +189,6 @@
     <string name="onb_perm_xiaomi">Allow pop-ups in background and lock screen</string>
     <string name="onb_perm_later">You can change all of these later in Settings.</string>
     <string name="onb_finish">Let\'s go</string>
+    <string name="perm_screen_on">Turn the screen on</string>
+    <string name="onb_perm_screen_on">Wake the screen when an alarm rings</string>
 </resources>

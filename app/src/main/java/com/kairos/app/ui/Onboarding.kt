@@ -186,6 +186,9 @@ private fun PermissionsStep(onFinish: () -> Unit, onBack: () -> Unit) {
         if (Build.VERSION.SDK_INT >= 34) {
             PermItem(R.string.perm_full_screen, R.string.onb_perm_fullscreen, perms.fullScreen, i++) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
         }
+        if (Build.VERSION.SDK_INT >= 34) {
+            PermItem(R.string.perm_screen_on, R.string.onb_perm_screen_on, perms.screenOn, i++) { openPermissionSettings(ctx, PermKind.SCREEN_ON) }
+        }
         if (!perms.exactAlarm) {
             PermItem(R.string.perm_exact_alarm, R.string.onb_perm_exact, false, i++) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
         }

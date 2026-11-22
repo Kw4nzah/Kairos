@@ -199,6 +199,9 @@ fun SettingsScreen(
             PermRow(stringResource(R.string.perm_exact_alarm), perms.exactAlarm) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
             PermRow(stringResource(R.string.perm_full_screen), perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
             PermRow(stringResource(R.string.perm_overlay), perms.overlay) { openPermissionSettings(ctx, PermKind.OVERLAY) }
+            if (android.os.Build.VERSION.SDK_INT >= 34) {
+                PermRow(stringResource(R.string.perm_screen_on), perms.screenOn) { openPermissionSettings(ctx, PermKind.SCREEN_ON) }
+            }
             PermRow(stringResource(R.string.perm_battery), perms.batteryFree) { openPermissionSettings(ctx, PermKind.BATTERY) }
             if (isXiaomi()) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

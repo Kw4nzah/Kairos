@@ -183,4 +183,6 @@
     <string name="onb_perm_xiaomi">Разреши всплывающие окна в фоне и на экране блокировки</string>
     <string name="onb_perm_later">Всё это можно изменить позже в настройках.</string>
     <string name="onb_finish">Поехали</string>
+    <string name="perm_screen_on">Включение экрана</string>
+    <string name="onb_perm_screen_on">Чтобы экран включался, когда звонит будильник</string>
 </resources>

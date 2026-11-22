@@ -1,5 +1,6 @@
 package com.kairos.app.system
 
+import android.app.AppOpsManager
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -23,13 +24,30 @@ data class PermState(
     val exactAlarm: Boolean,
     val fullScreen: Boolean,
     val overlay: Boolean,
+    val screenOn: Boolean,
     val batteryFree: Boolean,
     val calendar: Boolean
 ) {
     val reminderIssues: Boolean get() = !notifications || !exactAlarm || !fullScreen || !overlay
 }
 
-enum class PermKind { NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN, OVERLAY, BATTERY }
+enum class PermKind { NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN, OVERLAY, SCREEN_ON, BATTERY }
+
+// Neither constant is in the public SDK surface for every API level we compile for, hence the raw values.
+private const val OP_TURN_SCREEN_ON = "android:turn_screen_on"
+private const val ACTION_TURN_SCREEN_ON_SETTINGS = "android.settings.TURN_SCREEN_ON_SETTINGS"
+
+/**
+ * "Turn screen on" special access. Where the system enforces it, an alarm without a popup rings on
+ * a black screen unless the user has allowed it. There is nothing to grant before Android 14.
+ */
+private fun canTurnScreenOn(ctx: Context): Boolean {
+    if (Build.VERSION.SDK_INT < 34) return true
+    val ops = ctx.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    return runCatching {
+        ops.unsafeCheckOpNoThrow(OP_TURN_SCREEN_ON, ctx.applicationInfo.uid, ctx.packageName) == AppOpsManager.MODE_ALLOWED
+    }.getOrDefault(true)
+}
 
 fun readPerms(ctx: Context): PermState {
     val fullScreen = if (Build.VERSION.SDK_INT >= 34) {
@@ -40,6 +58,7 @@ fun readPerms(ctx: Context): PermState {
         exactAlarm = Scheduler.canExact(ctx),
         fullScreen = fullScreen,
         overlay = Settings.canDrawOverlays(ctx),
+        screenOn = canTurnScreenOn(ctx),
         batteryFree = (ctx.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager).isIgnoringBatteryOptimizations(ctx.packageName),
         calendar = CalendarSync.hasPermission(ctx)
     )
@@ -72,6 +91,8 @@ fun openPermissionSettings(ctx: Context, kind: PermKind) {
                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkgUri)
             else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri)
         PermKind.OVERLAY -> Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri)
+        // No package URI: the per-app variant crashes Settings on Android 15 ("Invalid fragment for this activity").
+        PermKind.SCREEN_ON -> Intent(ACTION_TURN_SCREEN_ON_SETTINGS)
         PermKind.BATTERY -> Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkgUri)
         PermKind.FULL_SCREEN ->
             if (Build.VERSION.SDK_INT >= 34)
