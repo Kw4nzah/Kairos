@@ -18,6 +18,7 @@ import com.kairos.app.MainActivity
 import com.kairos.app.R
 import com.kairos.app.data.Reminder
 import com.kairos.app.data.Settings
+import com.kairos.app.data.ThemeMode
 import com.kairos.app.logic.SnoozeMachine
 import com.kairos.app.logic.ToneSet
 
@@ -64,7 +65,7 @@ object Notifier {
         )
     }
 
-    private fun popupIntent(ctx: Context, r: Reminder, title: String, body: String, stage: Int): Intent {
+    private fun popupIntent(ctx: Context, r: Reminder, title: String, body: String, stage: Int, theme: ThemeMode): Intent {
         val actions = if (stage >= 1) SnoozeMachine.actions(r.snoozeCount) else emptyList()
         return Intent(ctx, AlarmActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -72,6 +73,7 @@ object Notifier {
             .putExtra(AlarmActivity.X_TITLE, title)
             .putExtra(AlarmActivity.X_BODY, body)
             .putExtra(AlarmActivity.X_NOTES, r.notes)
+            .putExtra(AlarmActivity.X_THEME, theme.name)
             .putExtra(AlarmActivity.X_ACTIONS, actions.map { it.name }.toTypedArray())
             .putExtra(AlarmActivity.X_LABELS, actions.map { actionLabel(ctx, it, r.snoozeCount) }.toTypedArray())
     }
@@ -148,7 +150,7 @@ object Notifier {
             .setContentIntent(openApp(ctx, r.id))
             .setDeleteIntent(repostIntent(ctx, r.id, stage))
         if (silent) b.setSilent(true)
-        val popup = if (stage >= 1) popupIntent(ctx, r, title, body, stage) else null
+        val popup = if (stage >= 1) popupIntent(ctx, r, title, body, stage, settings.themeMode) else null
         if (popup != null) {
             b.setFullScreenIntent(
                 PendingIntent.getActivity(ctx, Codes.content(r.id) + 7, popup, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT),

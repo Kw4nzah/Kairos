@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- System splash copy of the launcher mark; only the accent differs, by theme. Keep the geometry in sync. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M68.14,37.15A22,22 0 1 1 50.18,32.33" />
+    <path
+        android:fillColor="@color/kairos_splash_accent"
+        android:pathData="M59.7,32.75m-5,0a5,5 0 1 1 10,0a5,5 0 1 1 -10,0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/kairos_splash_accent"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,54L56.9,43.4" />
+</vector>

@@ -3,13 +3,17 @@ package com.kairos.app
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kairos.app.data.ThemeMode
 import com.kairos.app.system.ACTION_USER
 import com.kairos.app.system.ActionReceiver
 import com.kairos.app.system.EXTRA_ACTION
@@ -40,6 +46,7 @@ import java.lang.ref.WeakReference
  */
 class AlarmActivity : ComponentActivity() {
     private var content by mutableStateOf(AlarmContent("", "", "", emptyList()))
+    private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var reminderId = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +68,19 @@ class AlarmActivity : ComponentActivity() {
         current = WeakReference(this)
         apply(intent)
         setContent {
-            KairosTheme {
+            val dark = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+            DisposableEffect(dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark },
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark }
+                )
+                onDispose { }
+            }
+            KairosTheme(darkTheme = dark) {
                 AlarmScreen(content) { action ->
                     sendBroadcast(
                         Intent(this, ActionReceiver::class.java).setAction(ACTION_USER)
@@ -81,6 +100,7 @@ class AlarmActivity : ComponentActivity() {
 
     private fun apply(i: Intent) {
         reminderId = i.getIntExtra(EXTRA_ID, -1)
+        themeMode = ThemeMode.parse(i.getStringExtra(X_THEME))
         content = AlarmContent(
             i.getStringExtra(X_TITLE).orEmpty(),
             i.getStringExtra(X_BODY).orEmpty(),
@@ -100,6 +120,7 @@ class AlarmActivity : ComponentActivity() {
         const val X_NOTES = "notes"
         const val X_ACTIONS = "actions"
         const val X_LABELS = "labels"
+        const val X_THEME = "theme"
         private var current: WeakReference<AlarmActivity>? = null
 
         /** Closes the popup if it is showing the given reminder (it was snoozed or completed elsewhere). */
