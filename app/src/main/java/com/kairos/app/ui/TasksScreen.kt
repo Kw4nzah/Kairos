@@ -83,7 +83,8 @@ fun TasksScreen(
                             val kind = when {
                                 !perms.notifications -> PermKind.NOTIFICATIONS
                                 !perms.exactAlarm -> PermKind.EXACT_ALARM
-                                else -> PermKind.FULL_SCREEN
+                                !perms.fullScreen -> PermKind.FULL_SCREEN
+                                else -> PermKind.OVERLAY
                             }
                             openPermissionSettings(ctx, kind)
                         }) { Text(stringResource(R.string.fix_permissions)) }

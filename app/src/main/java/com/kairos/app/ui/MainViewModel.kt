@@ -44,6 +44,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             repo.prefs.setLanguage(lang)
             Notifier.ensureChannels(Locales.localized(app, lang))
+            com.kairos.app.widget.Widget.refresh(app)
         }
     }
 

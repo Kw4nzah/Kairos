@@ -1,15 +1,21 @@
 package com.kairos.app.data
 
 import android.content.Context
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.kairos.app.system.Sounds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.kairosStore by preferencesDataStore(name = "kairos_prefs")
+// An unreadable file (power cut mid-write) would otherwise crash every start and every alarm.
+private val Context.kairosStore by preferencesDataStore(
+    name = "kairos_prefs",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() }
+)
 
 enum class ThemeMode {
     SYSTEM, LIGHT, DARK;

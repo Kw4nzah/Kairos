@@ -53,9 +53,10 @@ object SoundPreview {
 
     fun play(context: Context, sound: Sound) {
         stop()
-        player = MediaPlayer.create(context.applicationContext, sound.res)?.also { mp ->
+        player = runCatching { MediaPlayer.create(context.applicationContext, sound.res) }.getOrNull()?.also { mp ->
             mp.setOnCompletionListener { stop() }
-            mp.start()
+            mp.setOnErrorListener { _, _, _ -> stop(); true }
+            runCatching { mp.start() }
         }
     }
 

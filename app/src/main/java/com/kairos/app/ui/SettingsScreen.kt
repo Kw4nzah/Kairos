@@ -77,6 +77,8 @@ fun SettingsScreen(
     val perms = rememberPerms()
     var editProfile by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { SoundPreview.stop() } }
+
     val calendarLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
