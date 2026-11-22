@@ -88,6 +88,7 @@ class Repo(context: Context) {
         if (stage > 2) return
         val settings = prefs.settings.first()
         if (stage == 1) Notifier.cancel(ctx, id, 0) // the heads-up is obsolete once T arrives
+        if (stage == 2) Notifier.cancel(ctx, id, 1, closePopup = false) // the check replaces the main alert (and its ringing)
         Notifier.post(ctx, r, stage, settings)
     }
 
@@ -96,7 +97,7 @@ class Repo(context: Context) {
         val r = dao.get(id) ?: return
         if (r.done) return
         if (stage == 0 && System.currentTimeMillis() >= r.dueAt) return
-        Notifier.post(ctx, r, stage, prefs.settings.first(), silent = true)
+        Notifier.post(ctx, r, stage, prefs.settings.first(), silent = stage < 1)
     }
 
     suspend fun handleAction(id: Int, action: SnoozeMachine.Action) {

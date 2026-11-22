@@ -162,16 +162,34 @@ object Notifier {
             }
         }
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.notify(Codes.notif(r.id, stage), b.build())
+        val notification = b.build()
+        // From the main reminder on, sound and vibration repeat until the notification is cancelled,
+        // i.e. until the user presses a snooze / done button.
+        if (stage >= 1 && !silent) notification.flags = notification.flags or android.app.Notification.FLAG_INSISTENT
+        if (stage >= 1 && !silent) wakeScreen(ctx)
+        nm.notify(Codes.notif(r.id, stage), notification)
         // Alarm-style popup on top of whatever is on screen. Background launches are blocked unless the
         // "display over other apps" permission is granted; the full-screen intent covers a locked screen.
         if (popup != null && !silent) runCatching { ctx.startActivity(popup) }
     }
 
-    fun cancel(ctx: Context, id: Int, stage: Int) {
+    /** Turns the screen on for a few seconds so the alarm is seen even when the phone is idle. */
+    @Suppress("DEPRECATION")
+    private fun wakeScreen(ctx: Context) {
+        runCatching {
+            val pm = ctx.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+            pm.newWakeLock(
+                android.os.PowerManager.FULL_WAKE_LOCK or android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    android.os.PowerManager.ON_AFTER_RELEASE,
+                "kairos:alarm"
+            ).acquire(15_000L)
+        }
+    }
+
+    fun cancel(ctx: Context, id: Int, stage: Int, closePopup: Boolean = true) {
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.cancel(Codes.notif(id, stage))
-        if (stage >= 1) AlarmActivity.close(id)
+        if (stage >= 1 && closePopup) AlarmActivity.close(id)
     }
 
     fun cancelAll(ctx: Context, id: Int) {
