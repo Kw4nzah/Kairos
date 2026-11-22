@@ -29,15 +29,15 @@
 
 Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
 
-**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.4.0.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.4.1.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
 
 
 ## Durum
 
-- Derleniyor: debug APK derlenir (`:app:assembleDebug`).
-- Birim testleri var: tekrar mantığı, erteleme durum makinesi ve ton varyantı seçimi (`LogicTest`).
-- Emülatörde test edildi: bildirim zinciri (ön uyarı, ana bildirim, kontrol, erteleme düğmeleri) bir Android emülatöründe baştan sona çalıştırıldı.
-- **Henüz gerçek cihazda test edilmedi.** Gerçek pil yönetimi altında tam zamanlı alarmlar, tam ekran bildirimler, sesler ve takvim eşitlemesinin cihaz üzerinde doğrulanması gerekiyor.
+- Derleniyor: sürümler yerelde derlenen küçültülmüş APK'lardır (`:app:assembleRelease`).
+- Birim testleri var: tekrar mantığı, ertelemeli alarm zamanlaması, erteleme durum makinesi ve metin varyantı seçimi (`LogicTest`, `ChainTest`).
+- Emülatörde test edildi (Android 15): bildirim zinciri, yeniden başlatmayı aşan erteleme, PIN ile kilitli telefonda alarm, 1.4.0'dan güncelleme, üç dil ve iki tema.
+- **Gerçek cihaz testi sınırlı.** Alarm penceresinin bir telefonda çalıştığı görüldü. Ekran uyandırma, üretici pil yönetimi altında tam zamanlı alarmlar, ses ve takvim eşitlemesi cihaz üzerinde doğrulanmalı.
 
 ## Özellikler
 
@@ -45,11 +45,12 @@ Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatı
 - **Hatırlatma zinciri.** Her hatırlatma, `T` zamanı çevresinde üç bildirim gönderir: **T-10 dk** ön uyarı, **T** anında ana bildirim ve **T+5 dk** "Yaptın mı?" kontrolü.
 - **Kapatılamayan, ısrarcı bildirimler.** Kalıcıdır, otomatik kapanmaz, kapatma düğmesi yoktur, titreşimli en yüksek önemde alarm kanalı kullanır, Rahatsız Etme'yi aşar ve kilit ekranında görünür. Biri kaydırılarak silinirse silme niyeti (delete intent) onu yeniden gönderir. T ve T+5 bildirimleri ayrıca tam ekran niyeti ister.
 - **Yalnızca ertelemeli son bildirim.** T+5 bildirimi yalnızca **5 dk ertele** ve **10 dk ertele** seçeneklerini sunar.
+- **Erteleme zincirin yerini alır.** Yalnızca ertelenen alarm çalar; yeniden başlatma, uygulama güncellemesi ve saat değişikliğinde korunur.
 - **Üç erteleme sonrası.** Yalnızca **"10 dk daha ertele"** veya **"Tamam, yaptım (bir daha gönderme)"** kalır; metin biraz daha kararlı olur.
 - **Hatırlatma başına ses.** 16 hazır ses. Her hatırlatma için birini seç, Ayarlar'da varsayılan belirle, kaydetmeden önce dinle. Her ses kendi bildirim kanalını alır.
 - **Tekrarlar.** Yok, günlük, haftalık (seçilen günler) veya aylık (kısa aylara göre ayarlanır).
 - **Hardcore modu.** İsteğe bağlı. Her hatırlatmayı telefondaki yerel bir "Kairos" takvimine yansıtır (10 dk önce ve tam zamanında alarm), böylece sistem takvimi üzerinden de çalar. Takvim izni gerekir; kapatınca kayıtlar silinir.
-- **Alarm penceresi.** Ana hatırlatmadan itibaren kilit ekranının ve diğer uygulamaların üstünde tam ekran bir pencere açılır; Geri tuşu kapatmaz, yalnızca ertele ya da tamam kapatır. "Diğer uygulamaların üzerinde göster" izni gerekir (Ayarlar → İzinler).
+- **Alarm penceresi.** Ana hatırlatmadan itibaren ekran uyanır, kilit ekranının ve diğer uygulamaların üstünde tam ekran bir pencere açılır; Geri tuşu kapatmaz, yalnızca ertele ya da tamam kapatır. Ses ve titreşim, ertele ya da tamam diyene kadar tekrarlar. "Diğer uygulamaların üzerinde göster" izni gerekir; Android 14+ için "Ekranı açma" iznini de ver (Ayarlar → İzinler). Aynı bölümde "Alarmı test et" düğmesi, Xiaomi telefonlarda da sistemin gizlediği açılır pencere ve kilit ekranı izinlerine kısayol bulunur.
 - **Ana ekran widget'ı.** Sıradaki hatırlatmalar tek bakışta; daireye dokunup yapıldı işaretle, "+" ile yenisini ekle. Boyutlandırılabilir, açık/koyu temaya uyar.
 - **Uygulama içi güncelleme.** Ayarlar → Hakkında en son GitHub sürümünü kontrol eder, senin için indirip kurabilir (SHA-256 doğrulamalı; Android yine onay ister).
 - **Görev ve takvim görünümleri.** Bugün / yaklaşan / tamamlanan listeleri ve gün işaretli aylık takvim. Tarihler, ay ve gün adları ile haftanın ilk günü seçili dile uyar.
@@ -57,7 +58,7 @@ Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatı
 - **Diller.** İngilizce, Rusça ve Türkçe. Varsayılan olarak Kairos sistem dilini izler; Ayarlar'daki dil bölümü (Sistem / English / Türkçe / Русский) Android'in uygulama başına dil desteğiyle anında uygulanır. Bildirimler ve takvim kayıtları da seçilen dili kullanır.
 - **Gizlilik odaklı.** Hesap yok, analitik yok. Veriler yerel bir veritabanında kalır. Tek ağ kullanımı güncelleme kontrolüdür; GitHub ile konuşur ve senin hakkında hiçbir şey göndermez.
 
-Kullanılan izinler: bildirimler, tam zamanlı alarm, tam ekran niyeti, diğer uygulamaların üzerinde gösterme (alarm penceresi), açılış tamamlandı (yeniden zamanlamak için), titreşim, internet ve paket kurma (yalnızca güncelleme), pil kısıtlaması muafiyeti (isteğe bağlı) ve takvim okuma/yazma (yalnızca Hardcore modu).
+Kullanılan izinler: bildirimler, tam zamanlı alarm, tam ekran niyeti, diğer uygulamaların üzerinde gösterme (alarm penceresi), ekranı açma (Android 14+), açılış tamamlandı (yeniden zamanlamak için), titreşim, internet ve paket kurma (yalnızca güncelleme), pil kısıtlaması muafiyeti (isteğe bağlı) ve takvim okuma/yazma (yalnızca Hardcore modu).
 
 ## Ekran görüntüleri
 
@@ -76,7 +77,7 @@ Gereksinimler: JDK 17, Android SDK (compileSdk 35, minSdk 26), Gradle 8.9. Depod
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 
 gradle :app:testDebugUnitTest     # birim testleri
-gradle :app:assembleDebug         # app/build/outputs/apk/debug/*.apk
+gradle :app:assembleRelease       # app/build/outputs/apk/release/*.apk (yerel debug anahtarıyla imzalı)
 gradle :app:lintDebug             # lint (eksik çeviriler, sabit metinler, ...)
 ```
 

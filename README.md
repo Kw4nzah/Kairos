@@ -29,22 +29,23 @@
 
 Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Material 3). It does not chime once and go quiet: every reminder becomes a small escalating chain of sticky notifications, in one clear, friendly tone. Available in English, Russian and Turkish.
 
-**Install:** download `Kairos-1.4.0.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
+**Install:** download `Kairos-1.4.1.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
 
 ## Status
 
-- Built: the debug APK builds (`:app:assembleDebug`).
-- Unit-tested: recurrence, the snooze state machine and tone variant selection (`LogicTest`).
-- Emulator-tested: the notification chain, Hardcore calendar sync, reboot rescheduling, the three languages and both themes have been run end to end on an Android emulator.
-- **Not yet tested on a real device.** Exact alarms under real battery management, full-screen intents, sounds and calendar sync still need on-device verification.
+- Built: releases are minified APKs built locally (`:app:assembleRelease`).
+- Unit-tested: recurrence, alarm scheduling with snooze, the snooze state machine and text variant selection (`LogicTest`, `ChainTest`).
+- Emulator-tested (Android 15): the notification chain, a snooze across a reboot, the alarm on a phone locked with a PIN, upgrade from 1.4.0, the three languages and both themes.
+- **Limited real-device testing.** The popup has been seen working on a phone. Screen wake, exact alarms under vendor battery management, sound and calendar sync still need on-device confirmation.
 
 ## Features
 
 - **One friendly tone.** A greeting on the task list, notification copy, empty states and snackbars all use the same clear, friendly voice (`logic/Tone.kt`, backed by string resources).
 - **Reminder chain.** Each reminder fires three notifications around its time `T`: a heads-up at **T-10 min**, the main alert at **T**, and a "did you do it?" check at **T+5 min**.
 - **Non-dismissable, aggressive notifications.** They are ongoing, not auto-cancelled, have no dismiss action, use a max-importance alarm channel with vibration, bypass Do Not Disturb and show on the lock screen. If one is swiped away, a delete intent re-posts it. The T and T+5 notifications also request a full-screen intent.
-- **Alarm popup.** From T on, the screen wakes and a full-screen alarm popup opens over the lock screen and other apps (Back does not close it). Sound and vibration repeat until you press Snooze or Done. Needs "Display over other apps" (Settings → Permissions). Settings → Permissions has a "Test the alarm" button, and on Xiaomi phones a shortcut to the pop-up and lock-screen permissions the system hides.
+- **Alarm popup.** From T on, the screen wakes and a full-screen alarm popup opens over the lock screen and other apps (Back does not close it). Sound and vibration repeat until you press Snooze or Done. Needs "Display over other apps"; on Android 14+ also allow "Turn the screen on" (Settings → Permissions). Settings → Permissions has a "Test the alarm" button, and on Xiaomi phones a shortcut to the pop-up and lock-screen permissions the system hides.
 - **Snooze-only final notification.** The T+5 notification offers only **Snooze 5 min** and **Snooze 10 min**.
+- **Snooze replaces the chain.** Only the snoozed alarm rings, and it survives a restart, an app update and a clock change.
 - **After three snoozes.** Only **"Snooze 10 more min"** or **"Done, don't notify again"** remain, and the copy becomes a bit firmer.
 - **Per-reminder sounds.** 16 bundled sounds. Pick one per reminder, set a default in Settings, preview before saving. Each sound gets its own notification channel.
 - **Repeats.** None, daily, weekly (chosen weekdays) or monthly (clamped to short months).
@@ -56,7 +57,7 @@ Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Materi
 - **Languages.** English, Russian and Turkish. By default Kairos follows the system language; Settings has a language section (System / English / Türkçe / Русский) that applies instantly, using Android's per-app language support. Notifications and calendar entries use the chosen language too.
 - **Private by design.** No accounts, no analytics. Data stays in a local database. The only network use is the update check, which talks to GitHub and sends nothing about you.
 
-Permissions used: notifications, exact alarms, full-screen intent, display over other apps (alarm popup), boot completed (to reschedule), vibrate, internet and install packages (updates only), battery-optimization exemption (optional), and read/write calendar (Hardcore mode only).
+Permissions used: notifications, exact alarms, full-screen intent, display over other apps (alarm popup), turn screen on (Android 14+), boot completed (to reschedule), vibrate, internet and install packages (updates only), battery-optimization exemption (optional), and read/write calendar (Hardcore mode only).
 
 ## Screenshots
 
@@ -75,7 +76,7 @@ Requirements: JDK 17, Android SDK (compileSdk 35, minSdk 26), Gradle 8.9. The re
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 
 gradle :app:testDebugUnitTest     # unit tests
-gradle :app:assembleDebug         # app/build/outputs/apk/debug/*.apk
+gradle :app:assembleRelease       # app/build/outputs/apk/release/*.apk (signed with the local debug key)
 gradle :app:lintDebug             # lint (missing translations, hardcoded text, ...)
 ```
 
