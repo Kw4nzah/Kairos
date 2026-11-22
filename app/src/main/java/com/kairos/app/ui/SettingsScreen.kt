@@ -349,7 +349,7 @@ private fun UpdateRow(currentVersion: String) {
                 Text(stringResource(R.string.update_install))
             }
             UpdateState.NeedPermission -> Button(
-                onClick = { Updater.openInstallPermission(ctx) }, modifier = Modifier.fillMaxWidth()
+                onClick = { runCatching { Updater.openInstallPermission(ctx) }.onFailure { state = UpdateState.Failed } }, modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.update_allow)) }
             is UpdateState.Downloading, UpdateState.Checking -> {}
             else -> OutlinedButton(onClick = {
@@ -371,7 +371,7 @@ private fun UpdateRow(currentVersion: String) {
         val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
             val f = apk
             if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME && state == UpdateState.NeedPermission && f != null && Updater.canInstall(ctx)) {
-                Updater.install(ctx, f); state = UpdateState.Idle
+                state = if (runCatching { Updater.install(ctx, f) }.isSuccess) UpdateState.Idle else UpdateState.Failed
             }
         }
         owner.lifecycle.addObserver(obs)
