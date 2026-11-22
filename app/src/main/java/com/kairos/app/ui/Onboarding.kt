@@ -214,7 +214,7 @@ private fun PermItem(title: Int, why: Int, granted: Boolean?, index: Int, onAllo
         }
         Spacer(Modifier.width(12.dp))
         if (granted == true) {
-            Text(stringResource(R.string.perm_on), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
+            Text(stringResource(R.string.perm_on), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         } else {
             OutlinedButton(onClick = onAllow) { Text(stringResource(R.string.perm_grant)) }
         }
