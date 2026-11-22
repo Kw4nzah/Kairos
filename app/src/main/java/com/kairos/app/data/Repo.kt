@@ -154,6 +154,10 @@ class Repo(context: Context) {
         // Free the far ones first, so the near ones always fit under the limit.
         waiting.drop(Chain.MAX_WAITING).forEach { Scheduler.cancel(ctx, it.id) }
         (active + waiting.take(Chain.MAX_WAITING)).forEach { Scheduler.schedule(ctx, it) }
+        // Up to 1.4.2 a finished one-off left its event, and its alarms, in the calendar.
+        if (prefs.settings.first().hardcore) {
+            dao.getAll().filter { it.done && it.calendarEventId != null }.forEach { syncOne(it) }
+        }
         Widget.refresh(ctx)
     }
 
@@ -186,6 +190,13 @@ class Repo(context: Context) {
     }
 
     private suspend fun syncOne(r: Reminder) {
+        if (r.done) {
+            // A finished one-off must not keep ringing through the calendar.
+            val stored = r.calendarEventId ?: return
+            withContext(Dispatchers.IO) { CalendarSync.deleteEvent(ctx, stored) }
+            dao.setCalendarEventId(r.id, null)
+            return
+        }
         val eventId = withContext(Dispatchers.IO) { CalendarSync.upsert(ctx, r) }
         if (eventId != null && eventId != r.calendarEventId) {
             dao.setCalendarEventId(r.id, eventId)
@@ -193,10 +204,13 @@ class Repo(context: Context) {
     }
 
     suspend fun syncAllToCalendar() {
-        dao.getAll().forEach { syncOne(it) }
+        // Start clean: turning it off without calendar permission leaves the old events, which would double up.
+        removeAllFromCalendar()
+        // Lock per reminder: holding it for the whole list would hold up alarms.
+        for (id in dao.getAll().map { it.id }) writes.withLock { dao.get(id)?.let { syncOne(it) } }
     }
 
-    suspend fun removeAllFromCalendar() {
+    suspend fun removeAllFromCalendar(): Unit = writes.withLock {
         withContext(Dispatchers.IO) { CalendarSync.removeCalendar(ctx) }
         dao.getAll().filter { it.calendarEventId != null }.forEach {
             dao.setCalendarEventId(it.id, null)

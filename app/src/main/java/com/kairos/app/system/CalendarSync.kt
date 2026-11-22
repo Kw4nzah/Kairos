@@ -12,6 +12,7 @@ import android.provider.CalendarContract.Events
 import android.provider.CalendarContract.Reminders
 import androidx.core.content.ContextCompat
 import com.kairos.app.data.Reminder
+import com.kairos.app.logic.Limits
 import com.kairos.app.logic.Recurrence
 import com.kairos.app.logic.RepeatType
 import java.time.DayOfWeek
@@ -67,7 +68,7 @@ object CalendarSync {
     private fun rrule(r: Reminder): String? = when (RepeatType.parse(r.repeatType)) {
         RepeatType.NONE -> null
         RepeatType.DAILY -> "FREQ=DAILY"
-        RepeatType.MONTHLY -> "FREQ=MONTHLY"
+        RepeatType.MONTHLY -> Recurrence.monthlyRule(r.anchorDay)
         RepeatType.WEEKLY -> {
             val due = Instant.ofEpochMilli(r.dueAt).atZone(ZoneId.systemDefault()).dayOfWeek
             val mask = if ((r.weekdays and 0x7F) == 0) Recurrence.bit(due) else r.weekdays
@@ -103,8 +104,8 @@ object CalendarSync {
             val rule = rrule(r)
             val v = ContentValues().apply {
                 put(Events.CALENDAR_ID, calId)
-                put(Events.TITLE, r.title)
-                put(Events.DESCRIPTION, r.notes)
+                put(Events.TITLE, Limits.clip(r.title, Limits.TITLE))
+                put(Events.DESCRIPTION, Limits.clip(r.notes, Limits.NOTES_SHOWN))
                 put(Events.DTSTART, r.dueAt)
                 put(Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
                 put(Events.HAS_ALARM, 1)
@@ -119,7 +120,7 @@ object CalendarSync {
                 }
             }
             val existing = r.calendarEventId
-            if (existing != null) {
+            if (existing != null && owns(ctx, existing, calId)) {
                 val rows = cr.update(ContentUris.withAppendedId(Events.CONTENT_URI, existing), v, null, null)
                 if (rows > 0) {
                     writeAlarms(ctx, existing)
@@ -137,9 +138,21 @@ object CalendarSync {
         }
     }
 
+    /**
+     * Event ids restart when the phone's calendar storage is cleared, so a stored id may by then be one of
+     * the user's own events. Nothing outside the Kairos calendar may be touched.
+     */
+    private fun owns(ctx: Context, eventId: Long, calId: Long): Boolean =
+        ctx.contentResolver.query(
+            ContentUris.withAppendedId(Events.CONTENT_URI, eventId),
+            arrayOf(Events.CALENDAR_ID, Events.DELETED), null, null, null
+        )?.use { it.moveToFirst() && it.getLong(0) == calId && it.getInt(1) == 0 } ?: false
+
     fun deleteEvent(ctx: Context, eventId: Long) {
         if (!hasPermission(ctx)) return
         try {
+            val calId = calendarId(ctx, create = false) ?: return
+            if (!owns(ctx, eventId, calId)) return
             ctx.contentResolver.delete(ContentUris.withAppendedId(Events.CONTENT_URI, eventId), null, null)
         } catch (_: RuntimeException) {
         }

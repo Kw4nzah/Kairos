@@ -56,6 +56,13 @@ object Recurrence {
         return n
     }
 
+    /**
+     * Calendar rule matching [next]: "FREQ=MONTHLY" alone skips months without the 31st, the app uses their last day.
+     */
+    fun monthlyRule(anchorDay: Int): String =
+        if (anchorDay <= 28) "FREQ=MONTHLY"
+        else "FREQ=MONTHLY;BYMONTHDAY=" + (28..minOf(anchorDay, 31)).joinToString(",") + ";BYSETPOS=-1"
+
     /** Whether a reminder whose current occurrence is on [due] shows up on [date] (calendar dots). */
     fun occursOn(
         due: LocalDate,

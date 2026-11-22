@@ -50,6 +50,12 @@ class LogicTest {
         assertEquals(dt(2026, 3, 31), Recurrence.next(feb!!, RepeatType.MONTHLY, 0, 31))
     }
 
+    @Test fun monthlyCalendarRuleClampsLikeTheApp() {
+        assertEquals("FREQ=MONTHLY", Recurrence.monthlyRule(5))
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=28,29;BYSETPOS=-1", Recurrence.monthlyRule(29))
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1", Recurrence.monthlyRule(31))
+    }
+
     @Test fun nextAfterSkipsMissedOccurrences() {
         val next = Recurrence.nextAfter(dt(2026, 1, 1), dt(2026, 1, 10, 12), RepeatType.DAILY, 0, 1)
         assertEquals(dt(2026, 1, 11), next)
