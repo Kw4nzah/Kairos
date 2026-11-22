@@ -3,8 +3,10 @@ package com.kairos.app.system
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.kairos.app.data.Repo
 import com.kairos.app.logic.SnoozeMachine
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,12 +18,21 @@ const val EXTRA_ID = "id"
 const val EXTRA_STAGE = "stage"
 const val EXTRA_ACTION = "action"
 
+/** Which occurrence and snooze round a button was drawn for, so a stale or repeated press does nothing. */
+const val EXTRA_DUE = "due"
+const val EXTRA_COUNT = "count"
+
 private fun BroadcastReceiver.async(context: Context, block: suspend (Repo) -> Unit) {
     val pending = goAsync()
     val app = context.applicationContext
     CoroutineScope(Dispatchers.IO).launch {
         try {
             block(Repo(app))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // An uncaught error here kills the process, and every other alarm being handled with it.
+            Log.e("Kairos", "broadcast failed", e)
         } finally {
             pending.finish()
         }
@@ -52,7 +63,9 @@ class ActionReceiver : BroadcastReceiver() {
                 val action = runCatching {
                     SnoozeMachine.Action.valueOf(intent.getStringExtra(EXTRA_ACTION) ?: "")
                 }.getOrNull() ?: return
-                async(context) { it.handleAction(id, action) }
+                val due = if (intent.hasExtra(EXTRA_DUE)) intent.getLongExtra(EXTRA_DUE, 0L) else null
+                val count = if (intent.hasExtra(EXTRA_COUNT)) intent.getIntExtra(EXTRA_COUNT, 0) else null
+                async(context) { it.handleAction(id, action, due, count) }
             }
         }
     }
@@ -70,10 +83,14 @@ private val RESCHEDULE_ON = setOf(
     "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"
 )
 
-/** Reschedules everything after reboot, app update, clock/timezone change or exact-alarm grant. */
+/** Restores alarms after reboot, app update or exact-alarm grant, and follows clock changes. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action !in RESCHEDULE_ON) return
-        async(context) { it.rescheduleAll() }
+        when (intent.action) {
+            !in RESCHEDULE_ON -> return
+            // Alarms are wall-clock alarms and survive these. Rescheduling would ring every overdue one again.
+            Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED -> async(context) { it.onClockChanged() }
+            else -> async(context) { it.rescheduleAll() }
+        }
     }
 }

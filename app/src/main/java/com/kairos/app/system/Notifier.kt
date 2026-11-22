@@ -19,6 +19,7 @@ import com.kairos.app.R
 import com.kairos.app.data.Reminder
 import com.kairos.app.data.Settings
 import com.kairos.app.data.ThemeMode
+import com.kairos.app.logic.Limits
 import com.kairos.app.logic.SnoozeMachine
 import com.kairos.app.logic.ToneSet
 
@@ -89,6 +90,8 @@ object Notifier {
             .putExtra(AlarmActivity.X_BODY, body)
             .putExtra(AlarmActivity.X_NOTES, r.notes)
             .putExtra(AlarmActivity.X_THEME, theme.name)
+            .putExtra(EXTRA_DUE, r.dueAt)
+            .putExtra(EXTRA_COUNT, r.snoozeCount)
             .putExtra(AlarmActivity.X_ACTIONS, actions.map { it.name }.toTypedArray())
             .putExtra(AlarmActivity.X_LABELS, actions.map { actionLabel(ctx, it, r.snoozeCount) }.toTypedArray())
     }
@@ -100,11 +103,12 @@ object Notifier {
                 .putExtra(EXTRA_ID, id).putExtra(EXTRA_STAGE, stage)
         )
 
-    private fun actionIntent(ctx: Context, id: Int, action: SnoozeMachine.Action): PendingIntent =
+    private fun actionIntent(ctx: Context, r: Reminder, action: SnoozeMachine.Action): PendingIntent =
         broadcast(
-            ctx, Codes.action(id, action.ordinal),
+            ctx, Codes.action(r.id, action.ordinal),
             Intent(ctx, ActionReceiver::class.java).setAction(ACTION_USER)
-                .putExtra(EXTRA_ID, id).putExtra(EXTRA_ACTION, action.name)
+                .putExtra(EXTRA_ID, r.id).putExtra(EXTRA_ACTION, action.name)
+                .putExtra(EXTRA_DUE, r.dueAt).putExtra(EXTRA_COUNT, r.snoozeCount)
         )
 
     private fun actionLabel(ctx: Context, action: SnoozeMachine.Action, snoozeCount: Int): String = ctx.getString(
@@ -118,7 +122,8 @@ object Notifier {
     )
 
     @SuppressLint("MissingPermission")
-    fun post(baseCtx: Context, r: Reminder, stage: Int, settings: Settings, silent: Boolean = false) {
+    fun post(baseCtx: Context, stored: Reminder, stage: Int, settings: Settings, silent: Boolean = false) {
+        val r = stored.copy(title = Limits.clip(stored.title, Limits.TITLE), notes = Limits.clip(stored.notes, Limits.NOTES_SHOWN))
         // Receivers run outside the Activity, so build a context for the language chosen in settings.
         val ctx = Locales.localized(baseCtx, settings.language)
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -175,7 +180,7 @@ object Notifier {
         if (stage >= 1) {
             // Only snooze / done actions are offered; there is intentionally no plain dismiss.
             for (a in SnoozeMachine.actions(r.snoozeCount)) {
-                b.addAction(0, actionLabel(ctx, a, r.snoozeCount), actionIntent(ctx, r.id, a))
+                b.addAction(0, actionLabel(ctx, a, r.snoozeCount), actionIntent(ctx, r, a))
             }
         }
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

@@ -6,11 +6,29 @@ object Chain {
 
     private const val MIN = 60_000L
     private const val CATCH_UP_MS = 1_500L
+    private const val EARLY_SLACK_MS = 2_000L
+
+    /**
+     * Android allows 500 pending alarms per app and throws beyond that. A waiting reminder needs three,
+     * so only the nearest ones are armed; the next in line is armed as soon as one fires or is removed.
+     */
+    const val MAX_WAITING = 80
 
     /** Offsets of stages 0,1,2 relative to the chosen time T: T-10min, T, T+5min. */
     private val OFFSETS = longArrayOf(-10 * MIN, 0L, 5 * MIN)
 
     data class Alarm(val stage: Int, val at: Long)
+
+    /** Waiting: not even the heads-up is due yet. */
+    fun isWaiting(dueAt: Long, snoozeUntil: Long?, now: Long): Boolean =
+        snoozeUntil == null && dueAt + OFFSETS[0] > now
+
+    /** False for an alarm that was already on its way when the reminder was snoozed, completed or moved. */
+    fun shouldFire(stage: Int, dueAt: Long, snoozeUntil: Long?, now: Long): Boolean = when {
+        stage == SNOOZE_STAGE -> snoozeUntil != null && snoozeUntil <= now + EARLY_SLACK_MS
+        stage !in OFFSETS.indices || snoozeUntil != null -> false
+        else -> dueAt + OFFSETS[stage] <= now + EARLY_SLACK_MS
+    }
 
     /**
      * A snooze replaces the rest of the chain, so it is the only alarm while it is set. Otherwise the

@@ -63,6 +63,7 @@ private val OVERDUE = ColorProvider(day = Color(0xFFB3261E), night = Color(0xFFE
 private val ON_ACCENT = ColorProvider(day = Color(0xFFFFFFFF), night = Color(0xFF2A0E13))
 
 private val idKey = ActionParameters.Key<Int>("id")
+private val dueKey = ActionParameters.Key<Long>("due")
 
 private data class WidgetRow(val r: Reminder, val label: String, val overdue: Boolean)
 
@@ -111,7 +112,7 @@ class KairosWidget : GlanceAppWidget() {
                             ) {
                                 Box(
                                     GlanceModifier.size(30.dp).cornerRadius(15.dp).background(CARD)
-                                        .clickable(actionRunCallback<CompleteCallback>(actionParametersOf(idKey to row.r.id))),
+                                        .clickable(actionRunCallback<CompleteCallback>(actionParametersOf(idKey to row.r.id, dueKey to row.r.dueAt))),
                                     contentAlignment = Alignment.Center
                                 ) { Text("○", style = TextStyle(color = ACCENT, fontSize = 18.sp)) }
                                 Spacer(GlanceModifier.width(10.dp))
@@ -141,7 +142,7 @@ class KairosWidgetReceiver : GlanceAppWidgetReceiver() {
 class CompleteCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val id = parameters[idKey] ?: return
-        Repo(context).complete(id)
+        Repo(context).complete(id, parameters[dueKey])
     }
 }
 

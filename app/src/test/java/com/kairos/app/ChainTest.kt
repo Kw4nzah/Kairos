@@ -3,6 +3,8 @@ package com.kairos.app
 import com.kairos.app.logic.Chain
 import com.kairos.app.logic.Chain.Alarm
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ChainTest {
@@ -38,6 +40,31 @@ class ChainTest {
     @Test fun pendingSnoozeSurvivesReschedule() {
         val until = t + 25 * min
         assertEquals(listOf(Alarm(3, until)), Chain.plan(t, until, t + 18 * min))
+    }
+
+    @Test fun alarmOfACompletedOccurrenceDoesNotFireForTheNextOne() {
+        assertFalse(Chain.shouldFire(1, t, null, t - 60 * min))
+        assertTrue(Chain.shouldFire(1, t, null, t))
+        assertTrue(Chain.shouldFire(0, t, null, t - 10 * min))
+        assertTrue(Chain.shouldFire(2, t, null, t + 90 * min))
+    }
+
+    @Test fun snoozeSilencesTheChainUntilItIsDue() {
+        assertFalse(Chain.shouldFire(2, t, t + 10 * min, t + 5 * min))
+        assertFalse(Chain.shouldFire(3, t, t + 10 * min, t + 5 * min))
+        assertTrue(Chain.shouldFire(3, t, t + 10 * min, t + 10 * min))
+        assertFalse(Chain.shouldFire(3, t, null, t + 10 * min))
+        assertFalse(Chain.shouldFire(7, t, null, t + 10 * min))
+    }
+
+    @Test fun waitingMeansHeadsUpStillAhead() {
+        assertTrue(Chain.isWaiting(t, null, t - 11 * min))
+        assertFalse(Chain.isWaiting(t, null, t - 10 * min))
+        assertFalse(Chain.isWaiting(t, t + min, t - 30 * min))
+    }
+
+    @Test fun waitingWindowLeavesRoomUnderAndroidsLimit() {
+        assertTrue(Chain.MAX_WAITING * Chain.plan(t, null, 0L).size <= 250)
     }
 
     @Test fun snoozeMissedWhilePoweredOffFiresAtOnce() {

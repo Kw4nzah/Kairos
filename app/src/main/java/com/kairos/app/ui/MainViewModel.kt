@@ -31,7 +31,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun save(r: Reminder) = viewModelScope.launch { repo.save(r) }
     fun delete(id: Int) = viewModelScope.launch { repo.delete(id) }
-    fun complete(id: Int) = viewModelScope.launch { repo.complete(id) }
+    fun complete(r: Reminder) = viewModelScope.launch { repo.complete(r.id, r.dueAt) }
     fun reopen(id: Int) = viewModelScope.launch { repo.reopen(id) }
 
     fun saveProfile(name: String) = viewModelScope.launch { repo.prefs.setProfile(name) }

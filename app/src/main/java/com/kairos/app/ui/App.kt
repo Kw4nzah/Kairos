@@ -175,7 +175,7 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
                                     if (r.done) {
                                         vm.reopen(r.id); say(tone.snackReopened)
                                     } else {
-                                        vm.complete(r.id); say(tone.snackDone)
+                                        vm.complete(r); say(tone.snackDone)
                                     }
                                 },
                                 onOpen = { editingId = it.id; editOpen = true }

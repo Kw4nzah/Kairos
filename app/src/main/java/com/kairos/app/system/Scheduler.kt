@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import com.kairos.app.data.Reminder
 import com.kairos.app.logic.Chain
 
@@ -47,7 +48,10 @@ object Scheduler {
             )
             am.setAlarmClock(AlarmManager.AlarmClockInfo(at, show), pi)
         } catch (_: SecurityException) {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
+            runCatching { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi) }
+                .onFailure { Log.w("Kairos", "could not set alarm", it) }
+        } catch (e: IllegalStateException) {
+            Log.w("Kairos", "alarm limit reached", e)
         }
     }
 

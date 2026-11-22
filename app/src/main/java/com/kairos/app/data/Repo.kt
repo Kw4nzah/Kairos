@@ -12,6 +12,8 @@ import com.kairos.app.widget.Widget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDateTime
@@ -25,10 +27,14 @@ class Repo(context: Context) {
 
     fun observe(): Flow<List<Reminder>> = dao.observeAll()
 
-    suspend fun save(input: Reminder) {
+    suspend fun save(input: Reminder): Unit = writes.withLock {
         val zone = ZoneId.systemDefault()
+        val day = Instant.ofEpochMilli(input.dueAt).atZone(zone).toLocalDate()
+        val before = if (input.id == 0) null else dao.get(input.id)
+        // Feb 28 may be a clamped "31st". Editing the text alone must not turn it into "the 28th".
+        val sameDay = before != null && Instant.ofEpochMilli(before.dueAt).atZone(zone).toLocalDate() == day
         val toSave = input.copy(
-            anchorDay = Instant.ofEpochMilli(input.dueAt).atZone(zone).dayOfMonth,
+            anchorDay = if (sameDay && before?.repeatType == input.repeatType) before.anchorDay else day.dayOfMonth,
             snoozeCount = 0,
             snoozeUntil = null
         )
@@ -40,21 +46,32 @@ class Repo(context: Context) {
         Notifier.cancelAll(ctx, id)
         Scheduler.schedule(ctx, saved) // cancels old alarms first; no-op for done reminders
         syncCalendar(saved)
+        armNearest()
         Widget.refresh(ctx)
     }
 
-    suspend fun delete(id: Int) {
-        val r = dao.get(id) ?: return
+    suspend fun delete(id: Int): Unit = writes.withLock {
+        val r = dao.get(id) ?: return@withLock
         Notifier.cancelAll(ctx, id)
         Scheduler.cancel(ctx, id)
         r.calendarEventId?.let { withContext(Dispatchers.IO) { CalendarSync.deleteEvent(ctx, it) } }
         dao.delete(id)
+        armNearest()
         Widget.refresh(ctx)
     }
 
-    /** "Done": clears notifications; repeating reminders move on to their next occurrence. */
-    suspend fun complete(id: Int) {
-        val r = dao.get(id) ?: return
+    /**
+     * "Done": clears notifications; repeating reminders move on to their next occurrence.
+     * [shownDue] is the occurrence the user was looking at, so a second tap cannot skip the one after it.
+     */
+    suspend fun complete(id: Int, shownDue: Long? = null): Unit = writes.withLock {
+        val r = dao.get(id) ?: return@withLock
+        if (r.done || (shownDue != null && shownDue != r.dueAt)) return@withLock
+        completeLocked(r)
+    }
+
+    private suspend fun completeLocked(r: Reminder) {
+        val id = r.id
         Notifier.cancelAll(ctx, id)
         Scheduler.cancel(ctx, id)
         val zone = ZoneId.systemDefault()
@@ -70,46 +87,54 @@ class Repo(context: Context) {
         dao.update(updated)
         if (!updated.done) Scheduler.schedule(ctx, updated)
         syncCalendar(updated)
+        armNearest()
         Widget.refresh(ctx)
     }
 
-    suspend fun reopen(id: Int) {
-        val r = dao.get(id) ?: return
+    suspend fun reopen(id: Int): Unit = writes.withLock {
+        val r = dao.get(id) ?: return@withLock
+        if (!r.done) return@withLock
         val updated = r.copy(done = false, doneAt = null, snoozeCount = 0, snoozeUntil = null)
         dao.update(updated)
         Scheduler.schedule(ctx, updated)
         syncCalendar(updated)
+        armNearest()
         Widget.refresh(ctx)
     }
 
     /** Alarm for a chain stage. Stage 3 is a snoozed re-fire of stage 2. */
-    suspend fun fire(id: Int, rawStage: Int) {
-        val r = dao.get(id) ?: return
-        if (r.done) return
-        if (r.snoozeUntil != null && rawStage != Chain.SNOOZE_STAGE) return // was already on its way when snoozed
+    suspend fun fire(id: Int, rawStage: Int): Unit = writes.withLock {
+        // First, so that a failure below cannot stop the next reminders from being armed.
+        armNearest()
+        val r = dao.get(id) ?: return@withLock
+        if (r.done || !Chain.shouldFire(rawStage, r.dueAt, r.snoozeUntil, System.currentTimeMillis())) return@withLock
         val stage = if (rawStage == Chain.SNOOZE_STAGE) 2 else rawStage
-        if (stage > 2) return
         val settings = prefs.settings.first()
         if (stage == 1) Notifier.cancel(ctx, id, 0) // the heads-up is obsolete once T arrives
         if (stage == 2) Notifier.cancel(ctx, id, 1, closePopup = false) // the check replaces the main alert (and its ringing)
         Notifier.post(ctx, r, stage, settings)
+        Widget.refresh(ctx) // it just became due
     }
 
     /** deleteIntent: the user swiped a notification away, so put it straight back. */
-    suspend fun repost(id: Int, stage: Int) {
-        val r = dao.get(id) ?: return
-        if (r.done) return
+    suspend fun repost(id: Int, stage: Int): Unit = writes.withLock {
+        val r = dao.get(id) ?: return@withLock
+        if (r.done) return@withLock
         val now = System.currentTimeMillis()
-        if (stage == 0 && now >= r.dueAt) return
-        if (r.snoozeUntil != null && r.snoozeUntil > now) return
+        if (stage == 0 && now >= r.dueAt) return@withLock
+        if (stage >= 1 && r.snoozeUntil == null && now < r.dueAt) return@withLock // an earlier occurrence
+        if (r.snoozeUntil != null && r.snoozeUntil > now) return@withLock
         Notifier.post(ctx, r, stage, prefs.settings.first(), silent = stage < 1)
     }
 
-    suspend fun handleAction(id: Int, action: SnoozeMachine.Action) {
-        val r = dao.get(id) ?: return
+    suspend fun handleAction(id: Int, action: SnoozeMachine.Action, shownDue: Long?, shownCount: Int?): Unit = writes.withLock {
+        val r = dao.get(id) ?: return@withLock
+        if (r.done) return@withLock
+        if (shownDue != null && shownDue != r.dueAt) return@withLock
+        if (shownCount != null && shownCount != r.snoozeCount) return@withLock
         val outcome = SnoozeMachine.apply(r.snoozeCount, action)
         when {
-            outcome.done -> complete(id)
+            outcome.done -> completeLocked(r)
             outcome.delayMinutes != null -> {
                 val snoozed = r.copy(
                     snoozeCount = outcome.newCount,
@@ -122,9 +147,35 @@ class Repo(context: Context) {
         }
     }
 
-    suspend fun rescheduleAll() {
-        dao.getAll().filter { !it.done }.forEach { Scheduler.schedule(ctx, it) }
+    suspend fun rescheduleAll(): Unit = writes.withLock {
+        val now = System.currentTimeMillis()
+        val (waiting, active) = dao.getAll().filter { !it.done }.sortedBy { it.dueAt }
+            .partition { Chain.isWaiting(it.dueAt, it.snoozeUntil, now) }
+        // Free the far ones first, so the near ones always fit under the limit.
+        waiting.drop(Chain.MAX_WAITING).forEach { Scheduler.cancel(ctx, it.id) }
+        (active + waiting.take(Chain.MAX_WAITING)).forEach { Scheduler.schedule(ctx, it) }
         Widget.refresh(ctx)
+    }
+
+    suspend fun onClockChanged(): Unit = writes.withLock {
+        armNearest()
+        Widget.refresh(ctx)
+    }
+
+    /** Keeps the pending alarms under Android's limit (see [Chain.MAX_WAITING]); cheap for normal list sizes. */
+    private suspend fun armNearest() {
+        val now = System.currentTimeMillis()
+        val open = dao.getAll().filter { !it.done }
+        // Counts all open ones, not just waiting: several can start at once and all make room together.
+        if (open.size < Chain.MAX_WAITING) return
+        val waiting = open.filter { Chain.isWaiting(it.dueAt, it.snoozeUntil, now) }.sortedBy { it.dueAt }
+        waiting.drop(Chain.MAX_WAITING).forEach { Scheduler.cancel(ctx, it.id) }
+        waiting.take(Chain.MAX_WAITING).forEach { Scheduler.schedule(ctx, it) }
+    }
+
+    private companion object {
+        /** One writer at a time: receivers, the widget and the UI each have their own Repo. */
+        val writes = Mutex()
     }
 
     // ---- Hardcore mode (system calendar mirror) ----
