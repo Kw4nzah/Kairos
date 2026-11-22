@@ -1,16 +1,42 @@
-# Kairos
+<p align="center">
+  <img src="docs/hero.png" alt="Kairos: calendar, tasks in the light theme and tasks in the dark theme." width="100%">
+</p>
 
-**English** | [Türkçe](README.tr.md) | [Русский](README.ru.md)
+<h1 align="center">Kairos</h1>
 
-*An offline reminder app that won't let you ignore it.*
+<p align="center">
+  A reminder app that won't let you ignore it.<br>Tasks, repeats, a calendar and sticky notifications, offline on your Android phone.
+</p>
 
-Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Material 3). It does not just chime once: every reminder becomes a small escalating chain of sticky notifications, all in one clear, friendly tone. The app is available in English, Russian and Turkish.
+<p align="center">
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Kw4nzah/Kairos?color=8E2A38&label=release"></a>
+  <a href="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml"><img alt="CI" src="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml/badge.svg"></a>
+  <img alt="Platform: Android 8+" src="https://img.shields.io/badge/platform-Android%208%2B-A9B99A">
+  <img alt="Languages: English, Turkish, Russian" src="https://img.shields.io/badge/languages-EN%20%C2%B7%20TR%20%C2%B7%20RU-D7B978">
+  <img alt="Offline, no accounts, no analytics" src="https://img.shields.io/badge/privacy-offline%20%C2%B7%20no%20tracking-625B52">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>Download the APK</b></a>
+  ·
+  <a href="README.md">English</a>
+  ·
+  <a href="README.tr.md">Türkçe</a>
+  ·
+  <a href="README.ru.md">Русский</a>
+</p>
+
+---
+
+Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Material 3). It does not chime once and go quiet: every reminder becomes a small escalating chain of sticky notifications, in one clear, friendly tone. Available in English, Russian and Turkish.
+
+**Install:** download `Kairos-1.0.0.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
 
 ## Status
 
 - Built: the debug APK builds (`:app:assembleDebug`).
 - Unit-tested: recurrence, the snooze state machine and tone variant selection (`LogicTest`).
-- Emulator-tested: the notification chain (heads-up, main alert, check, snooze actions) has been run end to end on an Android emulator.
+- Emulator-tested: the notification chain, Hardcore calendar sync, reboot rescheduling, the three languages and both themes have been run end to end on an Android emulator.
 - **Not yet tested on a real device.** Exact alarms under real battery management, full-screen intents, sounds and calendar sync still need on-device verification.
 
 ## Features

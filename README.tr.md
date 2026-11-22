@@ -1,10 +1,37 @@
-# Kairos
+<p align="center">
+  <img src="docs/hero.png" alt="Kairos: calendar, tasks in the light theme and tasks in the dark theme." width="100%">
+</p>
 
-[English](README.md) | **Türkçe** | [Русский](README.ru.md)
+<h1 align="center">Kairos</h1>
 
-*Görmezden gelmene izin vermeyen, tamamen çevrimdışı bir hatırlatıcı.*
+<p align="center">
+  Görmezden gelmene izin vermeyen bir hatırlatıcı.<br>Görevler, tekrarlar, takvim ve yapışkan bildirimler; Android telefonunda, çevrimdışı.
+</p>
 
-Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Yalnızca bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. Uygulama İngilizce, Rusça ve Türkçe olarak kullanılabilir.
+<p align="center">
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Kw4nzah/Kairos?color=8E2A38&label=release"></a>
+  <a href="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml"><img alt="CI" src="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml/badge.svg"></a>
+  <img alt="Platform: Android 8+" src="https://img.shields.io/badge/platform-Android%208%2B-A9B99A">
+  <img alt="Languages: English, Turkish, Russian" src="https://img.shields.io/badge/languages-EN%20%C2%B7%20TR%20%C2%B7%20RU-D7B978">
+  <img alt="Offline, no accounts, no analytics" src="https://img.shields.io/badge/privacy-offline%20%C2%B7%20no%20tracking-625B52">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>APK'yı indir</b></a>
+  ·
+  <a href="README.md">English</a>
+  ·
+  <a href="README.tr.md">Türkçe</a>
+  ·
+  <a href="README.ru.md">Русский</a>
+</p>
+
+---
+
+Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
+
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.0.0.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
+
 
 ## Durum
 

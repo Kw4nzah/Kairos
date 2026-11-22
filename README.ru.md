@@ -1,10 +1,35 @@
-# Kairos
+<p align="center">
+  <img src="docs/hero.png" alt="Kairos: calendar, tasks in the light theme and tasks in the dark theme." width="100%">
+</p>
 
-[English](README.md) | [Türkçe](README.tr.md) | **Русский**
+<h1 align="center">Kairos</h1>
 
-*Автономное приложение-напоминалка, которое нельзя проигнорировать.*
+<p align="center">
+  Напоминалка, которую нельзя проигнорировать.<br>Задачи, повторы, календарь и «липкие» уведомления — офлайн на вашем Android.
+</p>
 
-Kairos — приложение-напоминалка для Android, написанное на Kotlin с Jetpack Compose (Material 3). Оно не просто звенит один раз: каждое напоминание превращается в небольшую цепочку нарастающих «липких» уведомлений, и всё это в одном понятном и дружелюбном тоне. Приложение доступно на английском, русском и турецком языках.
+<p align="center">
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Kw4nzah/Kairos?color=8E2A38&label=release"></a>
+  <a href="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml"><img alt="CI" src="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml/badge.svg"></a>
+  <img alt="Platform: Android 8+" src="https://img.shields.io/badge/platform-Android%208%2B-A9B99A">
+  <img alt="Languages: English, Turkish, Russian" src="https://img.shields.io/badge/languages-EN%20%C2%B7%20TR%20%C2%B7%20RU-D7B978">
+  <img alt="Offline, no accounts, no analytics" src="https://img.shields.io/badge/privacy-offline%20%C2%B7%20no%20tracking-625B52">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>**Установка:** скачайте `Kairos-1.0.0.apk` из [последнего релиза](https://github.com/Kw4nzah/Kairos/releases/latest), откройте на телефоне и при запросе разрешите установку из браузера или файлового менеджера. APK подписан отладочным ключом, поэтому Play Protect может попросить подтверждение.</b></a>
+  ·
+  <a href="README.md">English</a>
+  ·
+  <a href="README.tr.md">Türkçe</a>
+  ·
+  <a href="README.ru.md">Русский</a>
+</p>
+
+---
+
+Kairos — приложение-напоминалка для Android на Kotlin и Jetpack Compose (Material 3). Оно не звенит один раз и замолкает: каждое напоминание превращается в небольшую цепочку нарастающих «липких» уведомлений в одном понятном и дружелюбном тоне. Доступно на английском, русском и турецком.
+
 
 ## Статус
 
