@@ -72,6 +72,7 @@
     <string name="perm_notifications">Bildirimler</string>
     <string name="perm_exact_alarm">Tam zamanlı alarm</string>
     <string name="perm_full_screen">Tam ekran bildirim</string>
+    <string name="perm_overlay">Alarm penceresi (diğer uygulamaların üstünde)</string>
     <string name="perm_on">Açık</string>
     <string name="perm_off">Kapalı</string>
     <string name="perm_settings">Ayarlar</string>

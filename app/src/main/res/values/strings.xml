@@ -78,6 +78,7 @@
     <string name="perm_notifications">Notifications</string>
     <string name="perm_exact_alarm">Exact alarms</string>
     <string name="perm_full_screen">Full-screen notifications</string>
+    <string name="perm_overlay">Alarm popup over other apps</string>
     <string name="perm_on">On</string>
     <string name="perm_off">Off</string>
     <string name="perm_settings">Settings</string>

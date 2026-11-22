@@ -13,6 +13,7 @@ import android.media.AudioAttributes
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.kairos.app.AlarmActivity
 import com.kairos.app.MainActivity
 import com.kairos.app.R
 import com.kairos.app.data.Reminder
@@ -61,6 +62,17 @@ object Notifier {
         return PendingIntent.getActivity(
             ctx, Codes.content(id), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+    }
+
+    private fun popupIntent(ctx: Context, r: Reminder, title: String, body: String, stage: Int): Intent {
+        val actions = if (stage == 2) SnoozeMachine.actions(r.snoozeCount) else emptyList()
+        return Intent(ctx, AlarmActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(EXTRA_ID, r.id)
+            .putExtra(AlarmActivity.X_TITLE, title)
+            .putExtra(AlarmActivity.X_BODY, if (r.notes.isBlank()) body else "$body\n${r.notes}")
+            .putExtra(AlarmActivity.X_ACTIONS, actions.map { it.name }.toTypedArray())
+            .putExtra(AlarmActivity.X_LABELS, actions.map { actionLabel(ctx, it, r.snoozeCount) }.toTypedArray())
     }
 
     private fun repostIntent(ctx: Context, id: Int, stage: Int): PendingIntent =
@@ -135,7 +147,13 @@ object Notifier {
             .setContentIntent(openApp(ctx, r.id))
             .setDeleteIntent(repostIntent(ctx, r.id, stage))
         if (silent) b.setSilent(true)
-        if (stage >= 1) b.setFullScreenIntent(openApp(ctx, r.id), true)
+        val popup = if (stage >= 1) popupIntent(ctx, r, title, body, stage) else null
+        if (popup != null) {
+            b.setFullScreenIntent(
+                PendingIntent.getActivity(ctx, Codes.content(r.id) + 7, popup, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT),
+                true
+            )
+        }
         if (stage == 2) {
             // Only snooze / done actions are offered; there is intentionally no plain dismiss.
             for (a in SnoozeMachine.actions(r.snoozeCount)) {
@@ -144,11 +162,15 @@ object Notifier {
         }
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(Codes.notif(r.id, stage), b.build())
+        // Alarm-style popup on top of whatever is on screen. Background launches are blocked unless the
+        // "display over other apps" permission is granted; the full-screen intent covers a locked screen.
+        if (popup != null && !silent) runCatching { ctx.startActivity(popup) }
     }
 
     fun cancel(ctx: Context, id: Int, stage: Int) {
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.cancel(Codes.notif(id, stage))
+        if (stage >= 1) AlarmActivity.close(id)
     }
 
     fun cancelAll(ctx: Context, id: Int) {

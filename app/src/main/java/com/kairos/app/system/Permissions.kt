@@ -22,12 +22,13 @@ data class PermState(
     val notifications: Boolean,
     val exactAlarm: Boolean,
     val fullScreen: Boolean,
+    val overlay: Boolean,
     val calendar: Boolean
 ) {
-    val reminderIssues: Boolean get() = !notifications || !exactAlarm || !fullScreen
+    val reminderIssues: Boolean get() = !notifications || !exactAlarm || !fullScreen || !overlay
 }
 
-enum class PermKind { NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN }
+enum class PermKind { NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN, OVERLAY }
 
 fun readPerms(ctx: Context): PermState {
     val fullScreen = if (Build.VERSION.SDK_INT >= 34) {
@@ -37,6 +38,7 @@ fun readPerms(ctx: Context): PermState {
         notifications = NotificationManagerCompat.from(ctx).areNotificationsEnabled(),
         exactAlarm = Scheduler.canExact(ctx),
         fullScreen = fullScreen,
+        overlay = Settings.canDrawOverlays(ctx),
         calendar = CalendarSync.hasPermission(ctx)
     )
 }
@@ -67,6 +69,7 @@ fun openPermissionSettings(ctx: Context, kind: PermKind) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkgUri)
             else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri)
+        PermKind.OVERLAY -> Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri)
         PermKind.FULL_SCREEN ->
             if (Build.VERSION.SDK_INT >= 34)
                 Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkgUri)

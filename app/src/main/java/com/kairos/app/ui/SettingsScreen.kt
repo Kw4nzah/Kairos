@@ -192,6 +192,7 @@ fun SettingsScreen(
             PermRow(stringResource(R.string.perm_notifications), perms.notifications) { openPermissionSettings(ctx, PermKind.NOTIFICATIONS) }
             PermRow(stringResource(R.string.perm_exact_alarm), perms.exactAlarm) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
             PermRow(stringResource(R.string.perm_full_screen), perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
+            PermRow(stringResource(R.string.perm_overlay), perms.overlay) { openPermissionSettings(ctx, PermKind.OVERLAY) }
         }
     }
 

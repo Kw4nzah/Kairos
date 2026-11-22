@@ -72,6 +72,7 @@
     <string name="perm_notifications">Уведомления</string>
     <string name="perm_exact_alarm">Точные будильники</string>
     <string name="perm_full_screen">Уведомления на весь экран</string>
+    <string name="perm_overlay">Окно будильника поверх других приложений</string>
     <string name="perm_on">Включено</string>
     <string name="perm_off">Выключено</string>
     <string name="perm_settings">Настройки</string>

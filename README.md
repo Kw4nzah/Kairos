@@ -30,7 +30,7 @@
 
 Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Material 3). It does not chime once and go quiet: every reminder becomes a small escalating chain of sticky notifications, in one clear, friendly tone. Available in English, Russian and Turkish.
 
-**Install:** download `Kairos-1.0.0.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
+**Install:** download `Kairos-1.1.0.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
 
 ## Status
 
@@ -44,6 +44,7 @@ Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Materi
 - **One friendly tone.** A greeting on the task list, notification copy, empty states and snackbars all use the same clear, friendly voice (`logic/Tone.kt`, backed by string resources).
 - **Reminder chain.** Each reminder fires three notifications around its time `T`: a heads-up at **T-10 min**, the main alert at **T**, and a "did you do it?" check at **T+5 min**.
 - **Non-dismissable, aggressive notifications.** They are ongoing, not auto-cancelled, have no dismiss action, use a max-importance alarm channel with vibration, bypass Do Not Disturb and show on the lock screen. If one is swiped away, a delete intent re-posts it. The T and T+5 notifications also request a full-screen intent.
+- **Alarm popup.** From T on, a full-screen alarm popup opens over the lock screen and other apps (Back does not close it). It closes only through snooze or done. Needs "Display over other apps" (Settings → Permissions).
 - **Snooze-only final notification.** The T+5 notification offers only **Snooze 5 min** and **Snooze 10 min**.
 - **After three snoozes.** Only **"Snooze 10 more min"** or **"Done, don't notify again"** remain, and the copy becomes a bit firmer.
 - **Per-reminder sounds.** 16 bundled sounds. Pick one per reminder, set a default in Settings, preview before saving. Each sound gets its own notification channel.
