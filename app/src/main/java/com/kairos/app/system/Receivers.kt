@@ -58,9 +58,22 @@ class ActionReceiver : BroadcastReceiver() {
     }
 }
 
+/**
+ * The broadcasts BootReceiver acts on. All are protected, so only the system can send them. The receiver
+ * has to be exported, and without this check any app could make overdue reminders ring again.
+ */
+private val RESCHEDULE_ON = setOf(
+    Intent.ACTION_BOOT_COMPLETED,
+    Intent.ACTION_MY_PACKAGE_REPLACED,
+    Intent.ACTION_TIME_CHANGED,
+    Intent.ACTION_TIMEZONE_CHANGED,
+    "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"
+)
+
 /** Reschedules everything after reboot, app update, clock/timezone change or exact-alarm grant. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action !in RESCHEDULE_ON) return
         async(context) { it.rescheduleAll() }
     }
 }
