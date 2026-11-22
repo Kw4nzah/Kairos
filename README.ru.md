@@ -10,14 +10,13 @@
 
 <p align="center">
   <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Kw4nzah/Kairos?color=8E2A38&label=release"></a>
-  <a href="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml"><img alt="CI" src="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml/badge.svg"></a>
   <img alt="Platform: Android 8+" src="https://img.shields.io/badge/platform-Android%208%2B-A9B99A">
   <img alt="Languages: English, Turkish, Russian" src="https://img.shields.io/badge/languages-EN%20%C2%B7%20TR%20%C2%B7%20RU-D7B978">
   <img alt="No accounts, no analytics" src="https://img.shields.io/badge/privacy-no%20accounts%20%C2%B7%20no%20tracking-625B52">
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>**Установка:** скачайте `Kairos-1.3.2.apk` из [последнего релиза](https://github.com/Kw4nzah/Kairos/releases/latest), откройте на телефоне и при запросе разрешите установку из браузера или файлового менеджера. APK подписан отладочным ключом, поэтому Play Protect может попросить подтверждение.</b></a>
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>**Установка:** скачайте `Kairos-1.3.3.apk` из [последнего релиза](https://github.com/Kw4nzah/Kairos/releases/latest), откройте на телефоне и при запросе разрешите установку из браузера или файлового менеджера. APK подписан отладочным ключом, поэтому Play Protect может попросить подтверждение.</b></a>
   ·
   <a href="README.md">English</a>
   ·
@@ -82,10 +81,6 @@ gradle :app:lintDebug             # lint (отсутствующие перев�
 ## Локализация
 
 Весь видимый пользователю текст хранится в строковых ресурсах Android: `app/src/main/res/values/strings.xml` (английский, по умолчанию), `values-tr/` (турецкий) и `values-ru/` (русский). В текстах тона используются подстановки `%1$s` (имя) и `%2$s` (название задачи) и массивы строк для случайных вариантов. Чтобы добавить язык, создайте `values-xx/strings.xml`, укажите его в `res/xml/locales_config.xml` и добавьте в `AppLanguage`.
-
-## CI
-
-GitHub Actions (`.github/workflows/android.yml`) запускается при каждом push, pull request и ручном запуске: Temurin JDK 17, Android SDK, Gradle 8.9, затем модульные тесты и сборка отладочного APK. APK загружается как артефакт `kairos-debug-apk`.
 
 ## Лицензия
 

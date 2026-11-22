@@ -86,3 +86,25 @@ fun openPermissionSettings(ctx: Context, kind: PermKind) {
         )
     }
 }
+
+fun isXiaomi(): Boolean = Build.MANUFACTURER.lowercase() in setOf("xiaomi", "redmi", "poco")
+
+/**
+ * Xiaomi (MIUI / HyperOS) hides "pop-ups while running in the background" and "show on lock screen"
+ * in its own permission editor; without them an alarm cannot wake the screen or open the popup.
+ */
+fun openXiaomiPermissions(ctx: Context) {
+    val pkg = ctx.packageName
+    val intents = listOf(
+        Intent("miui.intent.action.APP_PERM_EDITOR")
+            .setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity")
+            .putExtra("extra_pkgname", pkg),
+        Intent("miui.intent.action.APP_PERM_EDITOR").putExtra("extra_pkgname", pkg),
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg"))
+    )
+    for (i in intents) {
+        try {
+            ctx.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return
+        } catch (_: Exception) { }
+    }
+}

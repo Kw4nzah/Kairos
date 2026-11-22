@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import com.kairos.app.data.Settings
 import com.kairos.app.system.UpdateInfo
 import com.kairos.app.system.Updater
+import com.kairos.app.system.isXiaomi
+import com.kairos.app.system.openXiaomiPermissions
 import androidx.compose.material3.Button
 import kotlinx.coroutines.launch
 import com.kairos.app.logic.ToneSet
@@ -198,6 +200,24 @@ fun SettingsScreen(
             PermRow(stringResource(R.string.perm_full_screen), perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
             PermRow(stringResource(R.string.perm_overlay), perms.overlay) { openPermissionSettings(ctx, PermKind.OVERLAY) }
             PermRow(stringResource(R.string.perm_battery), perms.batteryFree) { openPermissionSettings(ctx, PermKind.BATTERY) }
+            if (isXiaomi()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.perm_xiaomi), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { openXiaomiPermissions(ctx) }) { Text(stringResource(R.string.perm_grant)) }
+                }
+            }
+            OutlinedButton(
+                onClick = {
+                    vm.save(
+                        com.kairos.app.data.Reminder(
+                            title = ctx.getString(R.string.test_alarm_title),
+                            dueAt = System.currentTimeMillis() + 15_000L
+                        )
+                    )
+                    say(ctx.getString(R.string.test_alarm_started))
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.test_alarm)) }
         }
 
         SettingsSection(stringResource(R.string.sec_about), 7) {

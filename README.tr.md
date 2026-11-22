@@ -10,7 +10,6 @@
 
 <p align="center">
   <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Kw4nzah/Kairos?color=8E2A38&label=release"></a>
-  <a href="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml"><img alt="CI" src="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml/badge.svg"></a>
   <img alt="Platform: Android 8+" src="https://img.shields.io/badge/platform-Android%208%2B-A9B99A">
   <img alt="Languages: English, Turkish, Russian" src="https://img.shields.io/badge/languages-EN%20%C2%B7%20TR%20%C2%B7%20RU-D7B978">
   <img alt="No accounts, no analytics" src="https://img.shields.io/badge/privacy-no%20accounts%20%C2%B7%20no%20tracking-625B52">
@@ -30,7 +29,7 @@
 
 Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
 
-**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.3.2.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.3.3.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
 
 
 ## Durum
@@ -84,10 +83,6 @@ gradle :app:lintDebug             # lint (eksik çeviriler, sabit metinler, ...)
 ## Yerelleştirme
 
 Kullanıcıya görünen tüm metinler Android string kaynaklarındadır: `app/src/main/res/values/strings.xml` (İngilizce, varsayılan), `values-tr/` (Türkçe) ve `values-ru/` (Rusça). Ton metinleri `%1$s` (ad) ve `%2$s` (görev başlığı) yer tutucularını ve rastgele varyantlar için string dizilerini kullanır. Yeni dil eklemek için `values-xx/strings.xml` ekle, `res/xml/locales_config.xml` içine yaz ve `AppLanguage`'e ekle.
-
-## CI
-
-GitHub Actions (`.github/workflows/android.yml`) her push, pull request ve elle tetiklemede çalışır: Temurin JDK 17, Android SDK, Gradle 8.9, ardından birim testleri ve debug APK derlemesi. APK, `kairos-debug-apk` artifact'i olarak yüklenir.
 
 ## Lisans
 

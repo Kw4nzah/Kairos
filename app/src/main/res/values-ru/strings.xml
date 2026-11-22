@@ -161,4 +161,8 @@
     <string name="update_allow">Разрешить установку</string>
     <string name="update_checking">Проверка…</string>
     <string name="perm_battery">Работа без ограничений батареи</string>
+    <string name="perm_xiaomi">Xiaomi: всплывающие окна в фоне и экран блокировки</string>
+    <string name="test_alarm">Проверить будильник (15 с, заблокируйте телефон)</string>
+    <string name="test_alarm_title">Тестовый будильник</string>
+    <string name="test_alarm_started">Тестовый будильник через 15 секунд.</string>
 </resources>
