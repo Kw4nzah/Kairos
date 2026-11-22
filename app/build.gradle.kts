@@ -13,10 +13,10 @@ android {
         applicationId = "com.kairos.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 11
+        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 12
         // The libraries ship some 80 languages; Kairos has three.
         resourceConfigurations += listOf("en", "tr", "ru")
-        versionName = (project.findProperty("vname") as String?) ?: "1.4.2"
+        versionName = (project.findProperty("vname") as String?) ?: "1.4.3"
     }
 
     buildTypes {

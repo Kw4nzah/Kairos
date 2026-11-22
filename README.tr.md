@@ -29,13 +29,13 @@
 
 Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
 
-**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.4.2.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.4.3.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
 
 
 ## Durum
 
 - Derleniyor: sürümler yerelde derlenen küçültülmüş APK'lardır (`:app:assembleRelease`).
-- Birim testleri var: tekrar mantığı, ertelemeli alarm zamanlaması, erteleme durum makinesi ve metin varyantı seçimi (`LogicTest`, `ChainTest`).
+- Birim testleri var: tekrar mantığı, ertelemeli alarm zamanlaması, erteleme durum makinesi ve metin varyantı seçimi (`LogicTest`, `ChainTest`, `UpdaterTest`).
 - Emülatörde test edildi (Android 15): bildirim zinciri, yeniden başlatmayı aşan erteleme, PIN ile kilitli telefonda alarm, 1.4.0'dan güncelleme, üç dil ve iki tema.
 - **Gerçek cihaz testi sınırlı.** Alarm penceresinin bir telefonda çalıştığı görüldü. Ekran uyandırma, üretici pil yönetimi altında tam zamanlı alarmlar, ses ve takvim eşitlemesi cihaz üzerinde doğrulanmalı.
 
@@ -52,7 +52,7 @@ Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatı
 - **Hardcore modu.** İsteğe bağlı. Her hatırlatmayı telefondaki yerel bir "Kairos" takvimine yansıtır (10 dk önce ve tam zamanında alarm), böylece sistem takvimi üzerinden de çalar. Takvim izni gerekir; kapatınca kayıtlar silinir.
 - **Alarm penceresi.** Ana hatırlatmadan itibaren ekran uyanır, kilit ekranının ve diğer uygulamaların üstünde tam ekran bir pencere açılır; Geri tuşu kapatmaz, yalnızca ertele ya da tamam kapatır. Ses ve titreşim, ertele ya da tamam diyene kadar tekrarlar. "Diğer uygulamaların üzerinde göster" izni gerekir; Android 14+ için "Ekranı açma" iznini de ver (Ayarlar → İzinler). Aynı bölümde "Alarmı test et" düğmesi, Xiaomi telefonlarda da sistemin gizlediği açılır pencere ve kilit ekranı izinlerine kısayol bulunur.
 - **Ana ekran widget'ı.** Sıradaki hatırlatmalar tek bakışta; daireye dokunup yapıldı işaretle, "+" ile yenisini ekle. Boyutlandırılabilir, açık/koyu temaya uyar.
-- **Uygulama içi güncelleme.** Ayarlar → Hakkında en son GitHub sürümünü kontrol eder, senin için indirip kurabilir (SHA-256 doğrulamalı; Android yine onay ister).
+- **Uygulama içi güncelleme.** Ayarlar → Hakkında en son GitHub sürümünü kontrol eder, senin için indirip kurabilir (SHA-256, paket ve imza doğrulamalı; Android yine onay ister).
 - **Görev ve takvim görünümleri.** Bugün / yaklaşan / tamamlanan listeleri ve gün işaretli aylık takvim. Tarihler, ay ve gün adları ile haftanın ilk günü seçili dile uyar.
 - **Tema seçimi.** Ayarlar'dan sistemi izle, açık veya koyu temayı zorla.
 - **Diller.** İngilizce, Rusça ve Türkçe. Varsayılan olarak Kairos sistem dilini izler; Ayarlar'daki dil bölümü (Sistem / English / Türkçe / Русский) Android'in uygulama başına dil desteğiyle anında uygulanır. Bildirimler ve takvim kayıtları da seçilen dili kullanır.
