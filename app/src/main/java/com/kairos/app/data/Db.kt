@@ -10,6 +10,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.kairos.app.logic.RepeatType
 import com.kairos.app.system.Sounds
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +34,9 @@ data class Reminder(
     val doneAt: Long? = null,
     /** Persisted snooze counter of the current occurrence. */
     val snoozeCount: Int = 0,
-    val calendarEventId: Long? = null
+    val calendarEventId: Long? = null,
+    /** When the snoozed alarm rings. While set, it replaces the rest of the chain. */
+    val snoozeUntil: Long? = null
 )
 
 @Dao
@@ -52,15 +56,25 @@ interface ReminderDao {
     @Update
     suspend fun update(reminder: Reminder)
 
+    /** Touches only this column, so a slow calendar sync cannot overwrite a snooze made meanwhile. */
+    @Query("UPDATE reminders SET calendarEventId = :eventId WHERE id = :id")
+    suspend fun setCalendarEventId(id: Int, eventId: Long?)
+
     @Query("DELETE FROM reminders WHERE id = :id")
     suspend fun delete(id: Int)
 }
 
-@Database(entities = [Reminder::class], version = 1, exportSchema = false)
+@Database(entities = [Reminder::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): ReminderDao
 
     companion object {
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN snoozeUntil INTEGER")
+            }
+        }
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -69,7 +83,7 @@ abstract class AppDatabase : RoomDatabase() {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "kairos.db"
-            ).build().also { instance = it }
+            ).addMigrations(MIGRATION_1_2).build().also { instance = it }
         }
     }
 }

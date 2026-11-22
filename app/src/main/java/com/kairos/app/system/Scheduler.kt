@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.kairos.app.data.Reminder
+import com.kairos.app.logic.Chain
 
 /** Request codes / notification ids derived from the reminder id. */
 object Codes {
@@ -18,14 +19,6 @@ object Codes {
 }
 
 object Scheduler {
-    const val SNOOZE_STAGE = 3
-    private const val MIN = 60_000L
-
-    /** Offsets of stages 0,1,2 relative to the chosen time T: T-10min, T, T+5min. */
-    private val OFFSETS = longArrayOf(-10 * MIN, 0L, 5 * MIN)
-
-    fun stageTime(r: Reminder, stage: Int): Long = r.dueAt + OFFSETS[stage]
-
     private fun alarmManager(ctx: Context) = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     fun canExact(ctx: Context): Boolean =
@@ -60,22 +53,13 @@ object Scheduler {
 
     fun cancel(ctx: Context, id: Int) {
         val am = alarmManager(ctx)
-        for (stage in 0..SNOOZE_STAGE) am.cancel(pending(ctx, id, stage))
+        for (stage in 0..Chain.SNOOZE_STAGE) am.cancel(pending(ctx, id, stage))
     }
 
-    /**
-     * Schedules the chain for the reminder's current occurrence. Future stages get their own alarm;
-     * the latest already-passed stage fires almost immediately (reboot / late edit catch-up).
-     */
+    /** Replaces the reminder's alarms with the ones its current state calls for (see [Chain.plan]). */
     fun schedule(ctx: Context, r: Reminder) {
         cancel(ctx, r.id)
         if (r.done) return
-        val now = System.currentTimeMillis()
-        val (past, future) = (0..2).partition { stageTime(r, it) <= now }
-        future.forEach { setAt(ctx, r.id, it, stageTime(r, it)) }
-        past.lastOrNull()?.let { setAt(ctx, r.id, it, now + 1_500L) }
+        Chain.plan(r.dueAt, r.snoozeUntil, System.currentTimeMillis()).forEach { setAt(ctx, r.id, it.stage, it.at) }
     }
-
-    /** Re-fires the chain's final notification at [at] (used by snooze). */
-    fun scheduleSnooze(ctx: Context, id: Int, at: Long) = setAt(ctx, id, SNOOZE_STAGE, at)
 }

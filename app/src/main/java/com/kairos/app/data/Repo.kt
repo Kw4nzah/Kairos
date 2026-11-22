@@ -1,6 +1,7 @@
 package com.kairos.app.data
 
 import android.content.Context
+import com.kairos.app.logic.Chain
 import com.kairos.app.logic.Recurrence
 import com.kairos.app.logic.RepeatType
 import com.kairos.app.logic.SnoozeMachine
@@ -28,7 +29,8 @@ class Repo(context: Context) {
         val zone = ZoneId.systemDefault()
         val toSave = input.copy(
             anchorDay = Instant.ofEpochMilli(input.dueAt).atZone(zone).dayOfMonth,
-            snoozeCount = 0
+            snoozeCount = 0,
+            snoozeUntil = null
         )
         val id = if (toSave.id == 0) dao.insert(toSave).toInt() else {
             dao.update(toSave)
@@ -61,9 +63,9 @@ class Repo(context: Context) {
             current, LocalDateTime.now(zone), RepeatType.parse(r.repeatType), r.weekdays, r.anchorDay
         )
         val updated = if (next == null) {
-            r.copy(done = true, doneAt = System.currentTimeMillis(), snoozeCount = 0)
+            r.copy(done = true, doneAt = System.currentTimeMillis(), snoozeCount = 0, snoozeUntil = null)
         } else {
-            r.copy(dueAt = next.atZone(zone).toInstant().toEpochMilli(), snoozeCount = 0)
+            r.copy(dueAt = next.atZone(zone).toInstant().toEpochMilli(), snoozeCount = 0, snoozeUntil = null)
         }
         dao.update(updated)
         if (!updated.done) Scheduler.schedule(ctx, updated)
@@ -73,7 +75,7 @@ class Repo(context: Context) {
 
     suspend fun reopen(id: Int) {
         val r = dao.get(id) ?: return
-        val updated = r.copy(done = false, doneAt = null, snoozeCount = 0)
+        val updated = r.copy(done = false, doneAt = null, snoozeCount = 0, snoozeUntil = null)
         dao.update(updated)
         Scheduler.schedule(ctx, updated)
         syncCalendar(updated)
@@ -84,7 +86,8 @@ class Repo(context: Context) {
     suspend fun fire(id: Int, rawStage: Int) {
         val r = dao.get(id) ?: return
         if (r.done) return
-        val stage = if (rawStage == Scheduler.SNOOZE_STAGE) 2 else rawStage
+        if (r.snoozeUntil != null && rawStage != Chain.SNOOZE_STAGE) return // was already on its way when snoozed
+        val stage = if (rawStage == Chain.SNOOZE_STAGE) 2 else rawStage
         if (stage > 2) return
         val settings = prefs.settings.first()
         if (stage == 1) Notifier.cancel(ctx, id, 0) // the heads-up is obsolete once T arrives
@@ -96,7 +99,9 @@ class Repo(context: Context) {
     suspend fun repost(id: Int, stage: Int) {
         val r = dao.get(id) ?: return
         if (r.done) return
-        if (stage == 0 && System.currentTimeMillis() >= r.dueAt) return
+        val now = System.currentTimeMillis()
+        if (stage == 0 && now >= r.dueAt) return
+        if (r.snoozeUntil != null && r.snoozeUntil > now) return
         Notifier.post(ctx, r, stage, prefs.settings.first(), silent = stage < 1)
     }
 
@@ -106,9 +111,13 @@ class Repo(context: Context) {
         when {
             outcome.done -> complete(id)
             outcome.delayMinutes != null -> {
-                dao.update(r.copy(snoozeCount = outcome.newCount))
+                val snoozed = r.copy(
+                    snoozeCount = outcome.newCount,
+                    snoozeUntil = System.currentTimeMillis() + outcome.delayMinutes * 60_000L
+                )
+                dao.update(snoozed)
                 Notifier.cancelAll(ctx, id)
-                Scheduler.scheduleSnooze(ctx, id, System.currentTimeMillis() + outcome.delayMinutes * 60_000L)
+                Scheduler.schedule(ctx, snoozed) // drops the rest of the chain
             }
         }
     }
@@ -128,7 +137,7 @@ class Repo(context: Context) {
     private suspend fun syncOne(r: Reminder) {
         val eventId = withContext(Dispatchers.IO) { CalendarSync.upsert(ctx, r) }
         if (eventId != null && eventId != r.calendarEventId) {
-            dao.update(r.copy(calendarEventId = eventId))
+            dao.setCalendarEventId(r.id, eventId)
         }
     }
 
@@ -139,7 +148,7 @@ class Repo(context: Context) {
     suspend fun removeAllFromCalendar() {
         withContext(Dispatchers.IO) { CalendarSync.removeCalendar(ctx) }
         dao.getAll().filter { it.calendarEventId != null }.forEach {
-            dao.update(it.copy(calendarEventId = null))
+            dao.setCalendarEventId(it.id, null)
         }
     }
 }
