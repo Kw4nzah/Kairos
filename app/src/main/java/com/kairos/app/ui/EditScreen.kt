@@ -44,12 +44,14 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.kairos.app.data.Reminder
+import com.kairos.app.logic.Limits
 import com.kairos.app.logic.Recurrence
 import com.kairos.app.logic.RepeatType
 import com.kairos.app.system.Sounds
@@ -79,22 +81,25 @@ fun EditScreen(
     onDelete: (Int) -> Unit
 ) {
     val ctx = LocalContext.current
-    val initial = remember(existing?.id) {
-        existing?.let { Fmt.local(it.dueAt) }
-            ?: LocalDateTime.now().plusHours(1).withSecond(0).withNano(0)
+    // Saveable, so rotation, a theme switch or process death does not wipe what was typed.
+    // The caller keys this screen by reminder id.
+    val initial = rememberSaveable {
+        (existing?.let { Fmt.local(it.dueAt) } ?: LocalDateTime.now().plusHours(1)).withSecond(0).withNano(0)
     }
-    var title by remember(existing?.id) { mutableStateOf(existing?.title ?: "") }
-    var notes by remember(existing?.id) { mutableStateOf(existing?.notes ?: "") }
-    var date by remember(existing?.id) { mutableStateOf(initial.toLocalDate()) }
-    var time by remember(existing?.id) { mutableStateOf(initial.toLocalTime().withSecond(0).withNano(0)) }
-    var repeat by remember(existing?.id) {
+    var title by rememberSaveable { mutableStateOf(Limits.clip(existing?.title ?: "", Limits.TITLE)) }
+    var notes by rememberSaveable { mutableStateOf(Limits.clip(existing?.notes ?: "", Limits.NOTES)) }
+    var date by rememberSaveable { mutableStateOf(initial.toLocalDate()) }
+    var time by rememberSaveable { mutableStateOf(initial.toLocalTime()) }
+    var repeat by rememberSaveable {
         mutableStateOf(existing?.let { RepeatType.parse(it.repeatType) } ?: RepeatType.NONE)
     }
-    var mask by remember(existing?.id) { mutableStateOf(existing?.weekdays ?: 0) }
-    var sound by remember(existing?.id) { mutableStateOf(existing?.sound ?: defaultSound) }
-    var showDate by remember { mutableStateOf(false) }
-    var showTime by remember { mutableStateOf(false) }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var mask by rememberSaveable { mutableStateOf(existing?.weekdays ?: 0) }
+    var sound by rememberSaveable { mutableStateOf(existing?.sound ?: defaultSound) }
+    var showDate by rememberSaveable { mutableStateOf(false) }
+    var showTime by rememberSaveable { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    // The screen stays tappable while it animates out; only the first Save or Delete counts.
+    var sent by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) { onDispose { SoundPreview.stop() } }
 
@@ -120,7 +125,11 @@ fun EditScreen(
             Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp)) {
                     Button(
                         onClick = {
-                            val due = Fmt.toMillis(LocalDateTime.of(date, time))
+                            if (sent) return@Button
+                            sent = true
+                            // Untouched time: keep the stored one, which moves on if it was completed meanwhile.
+                            val untouched = LocalDateTime.of(date, time) == initial
+                            val due = if (existing != null && untouched) existing.dueAt else Fmt.toMillis(LocalDateTime.of(date, time))
                             val weekly = if (repeat == RepeatType.WEEKLY) mask and 0x7F else 0
                             val base = existing ?: Reminder(title = "", dueAt = due)
                             onSave(
@@ -152,12 +161,12 @@ fun EditScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
-                value = title, onValueChange = { title = it },
+                value = title, onValueChange = { title = Limits.clip(it, Limits.TITLE) },
                 label = { Text(stringResource(R.string.field_title)) }, singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
-                value = notes, onValueChange = { notes = it },
+                value = notes, onValueChange = { notes = Limits.clip(it, Limits.NOTES) },
                 label = { Text(stringResource(R.string.field_notes)) }, minLines = 3,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -251,9 +260,9 @@ fun EditScreen(
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text(stringResource(R.string.delete_confirm_title)) },
-            text = { Text(existing.title) },
+            text = { Text(Limits.clip(existing.title, Limits.TITLE)) },
             confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onDelete(existing.id) }) { Text(stringResource(R.string.delete)) }
+                TextButton(onClick = { confirmDelete = false; if (!sent) { sent = true; onDelete(existing.id) } }) { Text(stringResource(R.string.delete)) }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } }
         )

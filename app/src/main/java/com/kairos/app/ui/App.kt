@@ -88,7 +88,8 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
     val newRequested by vm.newRequested.collectAsStateWithLifecycle()
     LaunchedEffect(newRequested) {
         if (newRequested) {
-            editingId = 0; editOpen = true
+            // The widget's "+" must not throw away what is being typed.
+            if (!editOpen) { editingId = 0; editOpen = true }
             vm.newRequested.value = false
         }
     }
@@ -111,7 +112,9 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
     val existing = reminders.firstOrNull { it.id == editingId }
     // Keeps the last edited reminder around so the edit screen does not flash empty while it animates out.
     val shown = remember { arrayOfNulls<Reminder>(1) }
-    if (editingId == 0) shown[0] = null else if (existing != null) shown[0] = existing
+    if (editingId == 0) shown[0] = null
+    else if (existing != null) shown[0] = existing
+    else if (shown[0]?.id != editingId) shown[0] = null
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         AnimatedContent(
@@ -132,21 +135,29 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
         ) { editing ->
             if (editing) {
                 BackHandler { editOpen = false }
-                EditScreen(
-                    existing = shown[0],
-                    defaultSound = settings.defaultSound,
-                    onBack = { editOpen = false },
-                    onSave = { r ->
-                        vm.save(r)
-                        say(if (r.id == 0) tone.snackAdded else tone.snackUpdated)
-                        editOpen = false
-                    },
-                    onDelete = { id ->
-                        vm.delete(id)
-                        say(tone.snackDeleted)
-                        editOpen = false
+                // After recreation the list loads a moment later. Until then this must not look like "New task",
+                // where Save would create a duplicate.
+                if (editingId == 0 || shown[0] != null) {
+                    androidx.compose.runtime.key(editingId) {
+                        EditScreen(
+                            existing = shown[0],
+                            defaultSound = settings.defaultSound,
+                            onBack = { editOpen = false },
+                            onSave = { r ->
+                                vm.save(r)
+                                say(if (r.id == 0) tone.snackAdded else tone.snackUpdated)
+                                editOpen = false
+                            },
+                            onDelete = { id ->
+                                vm.delete(id)
+                                say(tone.snackDeleted)
+                                editOpen = false
+                            }
+                        )
                     }
-                )
+                } else {
+                    Box(Modifier.fillMaxSize())
+                }
             } else {
                 MainScaffold(
                     tab = tab,

@@ -75,7 +75,7 @@ fun SettingsScreen(
 ) {
     val ctx = LocalContext.current
     val perms = rememberPerms()
-    var editProfile by remember { mutableStateOf(false) }
+    var editProfile by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
     val calendarLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -231,7 +231,7 @@ fun SettingsScreen(
     }
 
     if (editProfile) {
-        var name by remember { mutableStateOf(settings.name) }
+        var name by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(settings.name) }
         AlertDialog(
             onDismissRequest = { editProfile = false },
             title = { Text(stringResource(R.string.name_dialog_title)) },
