@@ -1,6 +1,7 @@
 package com.kairos.app.data
 
 import android.content.Context
+import android.os.SystemClock
 import com.kairos.app.logic.Chain
 import com.kairos.app.logic.Recurrence
 import com.kairos.app.logic.RepeatType
@@ -67,7 +68,11 @@ class Repo(context: Context) {
     suspend fun complete(id: Int, shownDue: Long? = null): Unit = writes.withLock {
         val r = dao.get(id) ?: return@withLock
         if (r.done || (shownDue != null && shownDue != r.dueAt)) return@withLock
+        // The list redraws with the next occurrence before a double tap's second half lands on it.
+        val tappedAt = SystemClock.elapsedRealtime()
+        completedAt[id]?.let { if (tappedAt - it < DOUBLE_TAP_MS) return@withLock }
         completeLocked(r)
+        if (RepeatType.parse(r.repeatType) != RepeatType.NONE) completedAt[id] = SystemClock.elapsedRealtime()
     }
 
     private suspend fun completeLocked(r: Reminder) {
@@ -180,6 +185,9 @@ class Repo(context: Context) {
     private companion object {
         /** One writer at a time: receivers, the widget and the UI each have their own Repo. */
         val writes = Mutex()
+
+        const val DOUBLE_TAP_MS = 1_000L
+        val completedAt = HashMap<Int, Long>() // guarded by writes
     }
 
     // ---- Hardcore mode (system calendar mirror) ----
