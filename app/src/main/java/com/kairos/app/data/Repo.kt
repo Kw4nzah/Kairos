@@ -7,6 +7,7 @@ import com.kairos.app.logic.SnoozeMachine
 import com.kairos.app.system.CalendarSync
 import com.kairos.app.system.Notifier
 import com.kairos.app.system.Scheduler
+import com.kairos.app.widget.Widget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -37,6 +38,7 @@ class Repo(context: Context) {
         Notifier.cancelAll(ctx, id)
         Scheduler.schedule(ctx, saved) // cancels old alarms first; no-op for done reminders
         syncCalendar(saved)
+        Widget.refresh(ctx)
     }
 
     suspend fun delete(id: Int) {
@@ -45,6 +47,7 @@ class Repo(context: Context) {
         Scheduler.cancel(ctx, id)
         r.calendarEventId?.let { withContext(Dispatchers.IO) { CalendarSync.deleteEvent(ctx, it) } }
         dao.delete(id)
+        Widget.refresh(ctx)
     }
 
     /** "Done": clears notifications; repeating reminders move on to their next occurrence. */
@@ -65,6 +68,7 @@ class Repo(context: Context) {
         dao.update(updated)
         if (!updated.done) Scheduler.schedule(ctx, updated)
         syncCalendar(updated)
+        Widget.refresh(ctx)
     }
 
     suspend fun reopen(id: Int) {
@@ -73,6 +77,7 @@ class Repo(context: Context) {
         dao.update(updated)
         Scheduler.schedule(ctx, updated)
         syncCalendar(updated)
+        Widget.refresh(ctx)
     }
 
     /** Alarm for a chain stage. Stage 3 is a snoozed re-fire of stage 2. */
@@ -109,6 +114,7 @@ class Repo(context: Context) {
 
     suspend fun rescheduleAll() {
         dao.getAll().filter { !it.done }.forEach { Scheduler.schedule(ctx, it) }
+        Widget.refresh(ctx)
     }
 
     // ---- Hardcore mode (system calendar mirror) ----

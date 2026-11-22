@@ -30,7 +30,7 @@
 
 Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
 
-**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.1.0.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.2.0.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
 
 
 ## Durum
@@ -50,6 +50,9 @@ Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatı
 - **Hatırlatma başına ses.** 16 hazır ses. Her hatırlatma için birini seç, Ayarlar'da varsayılan belirle, kaydetmeden önce dinle. Her ses kendi bildirim kanalını alır.
 - **Tekrarlar.** Yok, günlük, haftalık (seçilen günler) veya aylık (kısa aylara göre ayarlanır).
 - **Hardcore modu.** İsteğe bağlı. Her hatırlatmayı telefondaki yerel bir "Kairos" takvimine yansıtır (10 dk önce ve tam zamanında alarm), böylece sistem takvimi üzerinden de çalar. Takvim izni gerekir; kapatınca kayıtlar silinir.
+- **Alarm penceresi.** Ana hatırlatmadan itibaren kilit ekranının ve diğer uygulamaların üstünde tam ekran bir pencere açılır; Geri tuşu kapatmaz, yalnızca ertele ya da tamam kapatır. "Diğer uygulamaların üzerinde göster" izni gerekir (Ayarlar → İzinler).
+- **Ana ekran widget'ı.** Sıradaki hatırlatmalar tek bakışta; daireye dokunup yapıldı işaretle, "+" ile yenisini ekle. Boyutlandırılabilir, açık/koyu temaya uyar.
+- **Güncelleme kontrolü.** Ayarlar → Hakkında sürümü gösterir ve son sürüm sayfasını açar (uygulamanın kendisinde hâlâ ağ izni yok).
 - **Görev ve takvim görünümleri.** Bugün / yaklaşan / tamamlanan listeleri ve gün işaretli aylık takvim. Tarihler, ay ve gün adları ile haftanın ilk günü seçili dile uyar.
 - **Tema seçimi.** Ayarlar'dan sistemi izle, açık veya koyu temayı zorla.
 - **Diller.** İngilizce, Rusça ve Türkçe. Varsayılan olarak Kairos sistem dilini izler; Ayarlar'daki dil bölümü (Sistem / English / Türkçe / Русский) Android'in uygulama başına dil desteğiyle anında uygulanır. Bildirimler ve takvim kayıtları da seçilen dili kullanır.

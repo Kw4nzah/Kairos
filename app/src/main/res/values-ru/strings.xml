@@ -146,4 +146,10 @@
     <string name="tone_snack_calendar_denied">Доступ к календарю не предоставлен, режим Hardcore не включён.</string>
     <string name="tone_snack_profile_saved">Имя обновлено.</string>
     <string name="tone_permission_banner">Не хватает некоторых разрешений. Настрой их в настройках, чтобы напоминания не пропускались.</string>
+    <string name="sec_about">О приложении</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="check_updates">Проверить обновления</string>
+    <string name="widget_desc">Ближайшие напоминания с первого взгляда. Нажмите на кружок, чтобы отметить выполненным.</string>
+    <string name="widget_empty">Ничего не запланировано.</string>
+    <string name="widget_add">Добавить напоминание</string>
 </resources>

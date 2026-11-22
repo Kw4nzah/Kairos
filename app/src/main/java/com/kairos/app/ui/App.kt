@@ -85,6 +85,13 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
     var editOpen by rememberSaveable { mutableStateOf(false) }
     // 0 = new reminder, >0 = editing that reminder id
     var editingId by rememberSaveable { mutableStateOf(0) }
+    val newRequested by vm.newRequested.collectAsStateWithLifecycle()
+    LaunchedEffect(newRequested) {
+        if (newRequested) {
+            editingId = 0; editOpen = true
+            vm.newRequested.value = false
+        }
+    }
 
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {

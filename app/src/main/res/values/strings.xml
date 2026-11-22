@@ -152,4 +152,10 @@
     <string name="tone_snack_calendar_denied">Calendar permission was not granted, so Hardcore mode could not be turned on.</string>
     <string name="tone_snack_profile_saved">Name updated.</string>
     <string name="tone_permission_banner">Some permissions are missing. Finish setting them up in Settings so reminders aren\'t missed.</string>
+    <string name="sec_about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="check_updates">Check for updates</string>
+    <string name="widget_desc">Your next reminders at a glance. Tap the circle to mark one done.</string>
+    <string name="widget_empty">Nothing planned.</string>
+    <string name="widget_add">Add reminder</string>
 </resources>

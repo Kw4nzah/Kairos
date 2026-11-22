@@ -194,6 +194,19 @@ fun SettingsScreen(
             PermRow(stringResource(R.string.perm_full_screen), perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
             PermRow(stringResource(R.string.perm_overlay), perms.overlay) { openPermissionSettings(ctx, PermKind.OVERLAY) }
         }
+
+        SettingsSection(stringResource(R.string.sec_about), 7) {
+            val version = remember { runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull().orEmpty() }
+            Text(stringResource(R.string.about_version, version), style = MaterialTheme.typography.bodyMedium)
+            OutlinedButton(onClick = {
+                runCatching {
+                    ctx.startActivity(
+                        android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/Kw4nzah/Kairos/releases/latest"))
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.check_updates)) }
+        }
     }
 
     if (editProfile) {

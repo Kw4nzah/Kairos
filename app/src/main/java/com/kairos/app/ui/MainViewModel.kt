@@ -26,6 +26,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val settings: StateFlow<Settings?> =
         repo.prefs.settings.stateIn<Settings?>(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** Set by the widget "+" button; MainApp consumes it and opens the new-reminder screen. */
+    val newRequested = kotlinx.coroutines.flow.MutableStateFlow(false)
+
     fun save(r: Reminder) = viewModelScope.launch { repo.save(r) }
     fun delete(id: Int) = viewModelScope.launch { repo.delete(id) }
     fun complete(id: Int) = viewModelScope.launch { repo.complete(id) }

@@ -16,6 +16,8 @@ import com.kairos.app.data.ThemeMode
 import com.kairos.app.ui.KairosRoot
 import com.kairos.app.ui.KairosTheme
 import com.kairos.app.ui.MainViewModel
+import com.kairos.app.ui.SplashOverlay
+import com.kairos.app.widget.ACTION_NEW
 
 class MainActivity : AppCompatActivity() {
     private val vm: MainViewModel by viewModels()
@@ -25,10 +27,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         // Hold the splash until settings are read, so the chosen theme never flashes the wrong one.
         splash.setKeepOnScreenCondition { vm.settings.value == null }
-        splash.setOnExitAnimationListener { provider ->
-            provider.view.animate().alpha(0f).setDuration(220).withEndAction { provider.remove() }.start()
-        }
+        // The Compose splash overlay takes over with the same look, so the system one just goes away.
+        splash.setOnExitAnimationListener { provider -> provider.remove() }
         vm.syncLanguageFromSystem()
+        handleIntent(intent)
         enableEdgeToEdge()
         setContent {
             val settings by vm.settings.collectAsStateWithLifecycle()
@@ -47,8 +49,20 @@ class MainActivity : AppCompatActivity() {
                 onDispose { }
             }
             KairosTheme(darkTheme = dark) {
-                KairosRoot(vm)
+                androidx.compose.foundation.layout.Box {
+                    KairosRoot(vm)
+                    SplashOverlay()
+                }
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: android.content.Intent?) {
+        if (intent?.action == ACTION_NEW) vm.newRequested.value = true
     }
 }

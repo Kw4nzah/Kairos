@@ -30,7 +30,7 @@
 
 Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Material 3). It does not chime once and go quiet: every reminder becomes a small escalating chain of sticky notifications, in one clear, friendly tone. Available in English, Russian and Turkish.
 
-**Install:** download `Kairos-1.1.0.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
+**Install:** download `Kairos-1.2.0.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
 
 ## Status
 
@@ -50,6 +50,8 @@ Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Materi
 - **Per-reminder sounds.** 16 bundled sounds. Pick one per reminder, set a default in Settings, preview before saving. Each sound gets its own notification channel.
 - **Repeats.** None, daily, weekly (chosen weekdays) or monthly (clamped to short months).
 - **Hardcore mode.** Optional. Mirrors every reminder into a local "Kairos" calendar on the phone (alarm 10 min before and at the time), so it also fires through the system calendar. Needs calendar permission; turning it off removes the entries.
+- **Home-screen widget.** Upcoming reminders at a glance; tap the circle to mark one done, tap "+" to add a new one. Resizable, follows light/dark.
+- **Update check.** Settings → About shows the version and opens the latest release page (the app itself still has no network permission).
 - **Tasks and calendar views.** Today / upcoming / done lists and a month calendar with day markers. Dates, month names, weekday names and the first day of the week follow the active language.
 - **Theme choice.** Follow the system, or force light or dark, in Settings.
 - **Languages.** English, Russian and Turkish. By default Kairos follows the system language; Settings has a language section (System / English / Türkçe / Русский) that applies instantly, using Android's per-app language support. Notifications and calendar entries use the chosen language too.

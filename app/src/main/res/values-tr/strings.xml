@@ -146,4 +146,10 @@
     <string name="tone_snack_calendar_denied">Takvim izni verilmedi, Hardcore modu açılamadı.</string>
     <string name="tone_snack_profile_saved">Adın güncellendi.</string>
     <string name="tone_permission_banner">Bazı izinler eksik. Hatırlatmaların aksamaması için Ayarlar\'dan tamamla.</string>
+    <string name="sec_about">Hakkında</string>
+    <string name="about_version">Sürüm %1$s</string>
+    <string name="check_updates">Güncellemeleri kontrol et</string>
+    <string name="widget_desc">Sıradaki hatırlatmalarına tek bakışta ulaş. Yapıldı işaretlemek için daireye dokun.</string>
+    <string name="widget_empty">Planlı bir şey yok.</string>
+    <string name="widget_add">Hatırlatma ekle</string>
 </resources>
