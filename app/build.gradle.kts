@@ -13,8 +13,8 @@ android {
         applicationId = "com.kairos.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 10
-        versionName = (project.findProperty("vname") as String?) ?: "1.4.1"
+        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 11
+        versionName = (project.findProperty("vname") as String?) ?: "1.4.2"
     }
 
     buildTypes {
