@@ -31,25 +31,40 @@ object Notifier {
 
     /** One max-importance alarm-category channel per sound (channel sound is immutable). */
     fun ensureChannels(ctx: Context) {
+        for (s in Sounds.all) ensureChannel(ctx, s)
+    }
+
+    private fun ensureChannel(ctx: Context, s: Sound) {
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val attrs = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        for (s in Sounds.all) {
-            val ch = NotificationChannel(
-                Sounds.channelId(s.key), ctx.getString(R.string.channel_name, s.name(ctx)), NotificationManager.IMPORTANCE_HIGH
-            )
-            ch.description = ctx.getString(R.string.channel_desc, s.name(ctx))
-            ch.setSound(Sounds.uri(ctx, s), attrs)
-            ch.enableVibration(true)
-            ch.vibrationPattern = VIBRATION
-            ch.enableLights(true)
-            ch.lightColor = Color.parseColor("#0B6B66")
-            ch.lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
-            ch.setBypassDnd(true)
-            nm.createNotificationChannel(ch)
+        // What the user set on the old channel carries over: muted, importance, vibration, own ringtone.
+        val old = nm.getNotificationChannel(Sounds.legacyChannelId(s.key))
+        val ch = NotificationChannel(
+            Sounds.channelId(s.key),
+            ctx.getString(R.string.channel_name, s.name(ctx)),
+            old?.importance ?: NotificationManager.IMPORTANCE_HIGH
+        )
+        ch.description = ctx.getString(R.string.channel_desc, s.name(ctx))
+        val oldSound = old?.sound
+        val sound = when {
+            old == null -> Sounds.uri(ctx, s)
+            oldSound?.toString()?.startsWith("android.resource://${ctx.packageName}/") == true -> Sounds.uri(ctx, s)
+            else -> oldSound // silent, or a ringtone the user picked
         }
+        ch.setSound(sound, attrs)
+        ch.vibrationPattern = VIBRATION
+        ch.enableVibration(old?.shouldVibrate() ?: true) // after the pattern, which switches vibration on
+        ch.enableLights(true)
+        ch.lightColor = Color.parseColor("#0B6B66")
+        ch.lockscreenVisibility = old?.lockscreenVisibility
+            ?.takeIf { it == android.app.Notification.VISIBILITY_SECRET || it == android.app.Notification.VISIBILITY_PRIVATE }
+            ?: android.app.Notification.VISIBILITY_PUBLIC
+        ch.setBypassDnd(true)
+        nm.createNotificationChannel(ch)
+        if (old != null) nm.deleteNotificationChannel(old.id)
     }
 
     private fun broadcast(ctx: Context, code: Int, intent: Intent): PendingIntent =
@@ -110,7 +125,7 @@ object Notifier {
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) return
-        ensureChannels(ctx)
+        ensureChannel(ctx, Sounds.byKey(r.sound)) // only the one in use; the full set is made at app start
 
         val tone = ToneSet(ctx)
         val name = settings.name

@@ -37,10 +37,14 @@ object Sounds {
         all.firstOrNull { it.key == key } ?: all.first { it.key == DEFAULT_KEY }
 
     /** Channel sound is immutable, so there is one channel per sound. */
-    fun channelId(key: String): String = "kairos_${byKey(key).key}"
+    fun channelId(key: String): String = "kairos2_${byKey(key).key}"
 
+    /** Channels made up to 1.4.2. They stored numeric resource ids, which moved between builds. */
+    fun legacyChannelId(key: String): String = "kairos_${byKey(key).key}"
+
+    /** By name, never by number: a channel keeps this URI forever and resource ids change between builds. */
     fun uri(context: Context, sound: Sound): Uri =
-        Uri.parse("android.resource://${context.packageName}/${sound.res}")
+        Uri.parse("android.resource://${context.packageName}/raw/${context.resources.getResourceEntryName(sound.res)}")
 }
 
 /** Tiny single-instance preview player for the sound pickers. */
