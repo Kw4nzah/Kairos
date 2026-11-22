@@ -125,6 +125,7 @@ private fun AlarmScreen(c: AlarmContent, onAction: (String) -> Unit) {
         Text(c.title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center)
         Text(
             c.body, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(top = 16.dp, bottom = if (c.notes.isBlank()) 40.dp else 12.dp)
         )
         if (c.notes.isNotBlank()) {
