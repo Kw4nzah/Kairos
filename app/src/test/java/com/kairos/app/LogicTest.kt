@@ -52,8 +52,8 @@ class LogicTest {
 
     @Test fun monthlyCalendarRuleClampsLikeTheApp() {
         assertEquals("FREQ=MONTHLY", Recurrence.monthlyRule(5))
-        assertEquals("FREQ=MONTHLY;BYMONTHDAY=28,29;BYSETPOS=-1", Recurrence.monthlyRule(29))
-        assertEquals("FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1", Recurrence.monthlyRule(31))
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=29", Recurrence.monthlyRule(29))
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=-1", Recurrence.monthlyRule(31))
     }
 
     @Test fun nextAfterSkipsMissedOccurrences() {

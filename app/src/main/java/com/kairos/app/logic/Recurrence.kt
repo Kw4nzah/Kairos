@@ -57,11 +57,15 @@ object Recurrence {
     }
 
     /**
-     * Calendar rule matching [next]: "FREQ=MONTHLY" alone skips months without the 31st, the app uses their last day.
+     * Calendar rule close to [next]. The 31st is "last day of the month", exactly as in the app. For the 29th
+     * and 30th the calendar's preview skips February (Android ignores BYSETPOS here, so clamping can't be
+     * expressed); the event itself still moves to the 28th or 29th when the app advances to it.
      */
-    fun monthlyRule(anchorDay: Int): String =
-        if (anchorDay <= 28) "FREQ=MONTHLY"
-        else "FREQ=MONTHLY;BYMONTHDAY=" + (28..minOf(anchorDay, 31)).joinToString(",") + ";BYSETPOS=-1"
+    fun monthlyRule(anchorDay: Int): String = when {
+        anchorDay <= 28 -> "FREQ=MONTHLY"
+        anchorDay >= 31 -> "FREQ=MONTHLY;BYMONTHDAY=-1"
+        else -> "FREQ=MONTHLY;BYMONTHDAY=$anchorDay"
+    }
 
     /** Whether a reminder whose current occurrence is on [due] shows up on [date] (calendar dots). */
     fun occursOn(
