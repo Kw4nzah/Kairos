@@ -50,6 +50,10 @@ import com.kairos.app.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kairos.app.data.Settings
+import com.kairos.app.system.UpdateInfo
+import com.kairos.app.system.Updater
+import androidx.compose.material3.Button
+import kotlinx.coroutines.launch
 import com.kairos.app.logic.ToneSet
 import com.kairos.app.system.CalendarSync
 import com.kairos.app.system.PermKind
@@ -193,19 +197,13 @@ fun SettingsScreen(
             PermRow(stringResource(R.string.perm_exact_alarm), perms.exactAlarm) { openPermissionSettings(ctx, PermKind.EXACT_ALARM) }
             PermRow(stringResource(R.string.perm_full_screen), perms.fullScreen) { openPermissionSettings(ctx, PermKind.FULL_SCREEN) }
             PermRow(stringResource(R.string.perm_overlay), perms.overlay) { openPermissionSettings(ctx, PermKind.OVERLAY) }
+            PermRow(stringResource(R.string.perm_battery), perms.batteryFree) { openPermissionSettings(ctx, PermKind.BATTERY) }
         }
 
         SettingsSection(stringResource(R.string.sec_about), 7) {
             val version = remember { runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull().orEmpty() }
             Text(stringResource(R.string.about_version, version), style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton(onClick = {
-                runCatching {
-                    ctx.startActivity(
-                        android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/Kw4nzah/Kairos/releases/latest"))
-                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                }
-            }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.check_updates)) }
+            UpdateRow(version)
         }
     }
 
@@ -271,5 +269,87 @@ private fun PermRow(label: String, granted: Boolean, onFix: () -> Unit) {
             )
         }
         TextButton(onClick = onFix) { Text(stringResource(if (granted) R.string.perm_settings else R.string.perm_grant)) }
+    }
+}
+
+private sealed interface UpdateState {
+    data object Idle : UpdateState
+    data object Checking : UpdateState
+    data object UpToDate : UpdateState
+    data class Available(val info: UpdateInfo) : UpdateState
+    data class Downloading(val progress: Float) : UpdateState
+    data object NeedPermission : UpdateState
+    data object Failed : UpdateState
+}
+
+@Composable
+private fun UpdateRow(currentVersion: String) {
+    val ctx = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var state by remember { mutableStateOf<UpdateState>(UpdateState.Idle) }
+    var apk by remember { mutableStateOf<java.io.File?>(null) }
+
+    fun startDownload(info: UpdateInfo) {
+        scope.launch {
+            state = UpdateState.Downloading(0f)
+            try {
+                val f = Updater.download(ctx, info) { state = UpdateState.Downloading(it) }
+                apk = f
+                if (Updater.canInstall(ctx)) {
+                    Updater.install(ctx, f); state = UpdateState.Idle
+                } else {
+                    state = UpdateState.NeedPermission
+                }
+            } catch (_: Exception) {
+                state = UpdateState.Failed
+            }
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val s = state
+        when (s) {
+            UpdateState.UpToDate -> Text(stringResource(R.string.update_latest), style = MaterialTheme.typography.bodyMedium)
+            UpdateState.Failed -> Text(stringResource(R.string.update_failed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            is UpdateState.Available -> Text(stringResource(R.string.update_available, s.info.version), style = MaterialTheme.typography.bodyMedium)
+            is UpdateState.Downloading -> {
+                Text(stringResource(R.string.update_downloading, (s.progress * 100).toInt()), style = MaterialTheme.typography.bodyMedium)
+                androidx.compose.material3.LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
+            }
+            UpdateState.NeedPermission -> Text(stringResource(R.string.update_need_permission), style = MaterialTheme.typography.bodyMedium)
+            else -> {}
+        }
+        when (s) {
+            is UpdateState.Available -> Button(onClick = { startDownload(s.info) }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.update_install))
+            }
+            UpdateState.NeedPermission -> Button(
+                onClick = { Updater.openInstallPermission(ctx) }, modifier = Modifier.fillMaxWidth()
+            ) { Text(stringResource(R.string.update_allow)) }
+            is UpdateState.Downloading, UpdateState.Checking -> {}
+            else -> OutlinedButton(onClick = {
+                state = UpdateState.Checking
+                scope.launch {
+                    state = try {
+                        Updater.check(currentVersion)?.let { UpdateState.Available(it) } ?: UpdateState.UpToDate
+                    } catch (_: Exception) {
+                        UpdateState.Failed
+                    }
+                }
+            }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.check_updates)) }
+        }
+        if (s == UpdateState.Checking) Text(stringResource(R.string.update_checking), style = MaterialTheme.typography.bodyMedium)
+    }
+    // After the user grants "install unknown apps", continue with the already downloaded file.
+    val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(owner, state) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            val f = apk
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME && state == UpdateState.NeedPermission && f != null && Updater.canInstall(ctx)) {
+                Updater.install(ctx, f); state = UpdateState.Idle
+            }
+        }
+        owner.lifecycle.addObserver(obs)
+        onDispose { owner.lifecycle.removeObserver(obs) }
     }
 }

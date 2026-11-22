@@ -39,7 +39,7 @@ import java.lang.ref.WeakReference
  * it only closes through a snooze / done button or when the reminder is completed.
  */
 class AlarmActivity : ComponentActivity() {
-    private var content by mutableStateOf(AlarmContent("", "", emptyList()))
+    private var content by mutableStateOf(AlarmContent("", "", "", emptyList()))
     private var reminderId = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +84,7 @@ class AlarmActivity : ComponentActivity() {
         content = AlarmContent(
             i.getStringExtra(X_TITLE).orEmpty(),
             i.getStringExtra(X_BODY).orEmpty(),
+            i.getStringExtra(X_NOTES).orEmpty(),
             (i.getStringArrayExtra(X_ACTIONS) ?: emptyArray()).zip(i.getStringArrayExtra(X_LABELS) ?: emptyArray())
         )
     }
@@ -96,6 +97,7 @@ class AlarmActivity : ComponentActivity() {
     companion object {
         const val X_TITLE = "title"
         const val X_BODY = "body"
+        const val X_NOTES = "notes"
         const val X_ACTIONS = "actions"
         const val X_LABELS = "labels"
         private var current: WeakReference<AlarmActivity>? = null
@@ -107,7 +109,7 @@ class AlarmActivity : ComponentActivity() {
     }
 }
 
-private data class AlarmContent(val title: String, val body: String, val actions: List<Pair<String, String>>)
+private data class AlarmContent(val title: String, val body: String, val notes: String, val actions: List<Pair<String, String>>)
 
 @androidx.compose.runtime.Composable
 private fun AlarmScreen(c: AlarmContent, onAction: (String) -> Unit) {
@@ -123,8 +125,15 @@ private fun AlarmScreen(c: AlarmContent, onAction: (String) -> Unit) {
         Text(c.title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center)
         Text(
             c.body, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 16.dp, bottom = 40.dp)
+            modifier = Modifier.padding(top = 16.dp, bottom = if (c.notes.isBlank()) 40.dp else 12.dp)
         )
+        if (c.notes.isNotBlank()) {
+            Text(
+                c.notes, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 40.dp)
+            )
+        }
         c.actions.forEachIndexed { i, (key, label) ->
             val m = Modifier.fillMaxWidth().padding(vertical = 6.dp)
             if (i == 0) Button({ onAction(key) }, m) { Text(label) }

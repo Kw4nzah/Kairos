@@ -42,8 +42,8 @@ import kotlin.coroutines.coroutineContext
 /** Shared easing: quick start, soft landing. */
 val EaseOut = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
 
-const val DurShort = 180
-const val DurMed = 260
+const val DurShort = 110
+const val DurMed = 170
 
 /**
  * The app draws edge to edge, so the status bar is transparent. This paints a solid strip in the
@@ -88,11 +88,11 @@ fun Modifier.fadeIn(index: Int = 0): Modifier = composed {
         if (scale == 0f) {
             progress.snapTo(1f)
         } else {
-            delay(minOf(index, 6) * 50L)
-            progress.animateTo(1f, tween(320, easing = EaseOut))
+            delay(minOf(index, 4) * 25L)
+            progress.animateTo(1f, tween(200, easing = EaseOut))
         }
     }
-    val rise = with(LocalDensity.current) { 14.dp.toPx() }
+    val rise = with(LocalDensity.current) { 8.dp.toPx() }
     graphicsLayer {
         alpha = progress.value
         translationY = (1f - progress.value) * rise

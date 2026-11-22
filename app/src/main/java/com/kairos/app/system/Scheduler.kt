@@ -46,11 +46,13 @@ object Scheduler {
         val am = alarmManager(ctx)
         val pi = pending(ctx, id, stage)
         try {
-            if (canExact(ctx)) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
-            } else {
-                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
-            }
+            // An "alarm clock" alarm is exempt from Doze and most OEM battery killers, so it fires on time
+            // with the screen off and the phone locked. The show-intent just opens the app.
+            val show = PendingIntent.getActivity(
+                ctx, Codes.content(id), Intent(ctx, com.kairos.app.MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            am.setAlarmClock(AlarmManager.AlarmClockInfo(at, show), pi)
         } catch (_: SecurityException) {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
         }

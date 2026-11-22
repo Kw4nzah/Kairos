@@ -106,7 +106,7 @@ class Repo(context: Context) {
             outcome.done -> complete(id)
             outcome.delayMinutes != null -> {
                 dao.update(r.copy(snoozeCount = outcome.newCount))
-                Notifier.cancel(ctx, id, 2)
+                Notifier.cancelAll(ctx, id)
                 Scheduler.scheduleSnooze(ctx, id, System.currentTimeMillis() + outcome.delayMinutes * 60_000L)
             }
         }

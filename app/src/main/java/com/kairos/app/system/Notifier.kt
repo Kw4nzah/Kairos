@@ -65,12 +65,13 @@ object Notifier {
     }
 
     private fun popupIntent(ctx: Context, r: Reminder, title: String, body: String, stage: Int): Intent {
-        val actions = if (stage == 2) SnoozeMachine.actions(r.snoozeCount) else emptyList()
+        val actions = if (stage >= 1) SnoozeMachine.actions(r.snoozeCount) else emptyList()
         return Intent(ctx, AlarmActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra(EXTRA_ID, r.id)
             .putExtra(AlarmActivity.X_TITLE, title)
-            .putExtra(AlarmActivity.X_BODY, if (r.notes.isBlank()) body else "$body\n${r.notes}")
+            .putExtra(AlarmActivity.X_BODY, body)
+            .putExtra(AlarmActivity.X_NOTES, r.notes)
             .putExtra(AlarmActivity.X_ACTIONS, actions.map { it.name }.toTypedArray())
             .putExtra(AlarmActivity.X_LABELS, actions.map { actionLabel(ctx, it, r.snoozeCount) }.toTypedArray())
     }
@@ -154,7 +155,7 @@ object Notifier {
                 true
             )
         }
-        if (stage == 2) {
+        if (stage >= 1) {
             // Only snooze / done actions are offered; there is intentionally no plain dismiss.
             for (a in SnoozeMachine.actions(r.snoozeCount)) {
                 b.addAction(0, actionLabel(ctx, a, r.snoozeCount), actionIntent(ctx, r.id, a))

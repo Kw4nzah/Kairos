@@ -23,12 +23,13 @@ data class PermState(
     val exactAlarm: Boolean,
     val fullScreen: Boolean,
     val overlay: Boolean,
+    val batteryFree: Boolean,
     val calendar: Boolean
 ) {
     val reminderIssues: Boolean get() = !notifications || !exactAlarm || !fullScreen || !overlay
 }
 
-enum class PermKind { NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN, OVERLAY }
+enum class PermKind { NOTIFICATIONS, EXACT_ALARM, FULL_SCREEN, OVERLAY, BATTERY }
 
 fun readPerms(ctx: Context): PermState {
     val fullScreen = if (Build.VERSION.SDK_INT >= 34) {
@@ -39,6 +40,7 @@ fun readPerms(ctx: Context): PermState {
         exactAlarm = Scheduler.canExact(ctx),
         fullScreen = fullScreen,
         overlay = Settings.canDrawOverlays(ctx),
+        batteryFree = (ctx.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager).isIgnoringBatteryOptimizations(ctx.packageName),
         calendar = CalendarSync.hasPermission(ctx)
     )
 }
@@ -70,6 +72,7 @@ fun openPermissionSettings(ctx: Context, kind: PermKind) {
                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkgUri)
             else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri)
         PermKind.OVERLAY -> Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkgUri)
+        PermKind.BATTERY -> Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkgUri)
         PermKind.FULL_SCREEN ->
             if (Build.VERSION.SDK_INT >= 34)
                 Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkgUri)

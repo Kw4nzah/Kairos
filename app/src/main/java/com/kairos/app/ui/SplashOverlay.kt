@@ -37,10 +37,10 @@ private val SplashBg = Color(0xFF0B4F4B)
 fun SplashOverlay() {
     var visible by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        delay(900)
+        delay(700)
         visible = false
     }
-    AnimatedVisibility(visible = visible, exit = fadeOut(tween(350))) {
+    AnimatedVisibility(visible = visible, exit = fadeOut(tween(220))) {
         Box(Modifier.fillMaxSize().background(SplashBg), contentAlignment = Alignment.Center) {
             // Same size and position as the system splash icon so the hand-over is seamless.
             Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(288.dp))

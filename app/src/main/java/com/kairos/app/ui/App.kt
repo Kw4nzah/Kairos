@@ -122,7 +122,7 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
                         slideInVertically(tween(DurMed, easing = EaseOut)) { it / 14 }) togetherWith
                         fadeOut(tween(DurShort))
                 } else {
-                    (fadeIn(tween(DurMed, delayMillis = 60, easing = EaseOut)) +
+                    (fadeIn(tween(DurMed, easing = EaseOut)) +
                         scaleIn(tween(DurMed, easing = EaseOut), initialScale = 0.985f)) togetherWith
                         (fadeOut(tween(DurShort)) +
                             slideOutVertically(tween(DurMed, easing = EaseOut)) { it / 14 })
@@ -158,7 +158,7 @@ private fun MainApp(vm: MainViewModel, settings: Settings) {
                         targetState = tab,
                         transitionSpec = {
                             val dir = if (targetState > initialState) 1 else -1
-                            (fadeIn(tween(DurMed, delayMillis = 40, easing = EaseOut)) +
+                            (fadeIn(tween(DurMed, easing = EaseOut)) +
                                 slideInHorizontally(tween(DurMed, easing = EaseOut)) { dir * it / 12 }) togetherWith
                                 (fadeOut(tween(DurShort)) +
                                     slideOutHorizontally(tween(DurMed, easing = EaseOut)) { -dir * it / 12 })
@@ -217,7 +217,7 @@ private fun MainScaffold(
         floatingActionButton = {
             AnimatedVisibility(
                 visible = tab < 2,
-                enter = scaleIn(spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(tween(DurShort)),
+                enter = scaleIn(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium)) + fadeIn(tween(DurShort)),
                 exit = scaleOut(tween(DurShort)) + fadeOut(tween(DurShort))
             ) {
                 FloatingActionButton(onClick = onNew) {

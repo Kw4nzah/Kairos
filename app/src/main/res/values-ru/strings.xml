@@ -152,4 +152,13 @@
     <string name="widget_desc">Ближайшие напоминания с первого взгляда. Нажмите на кружок, чтобы отметить выполненным.</string>
     <string name="widget_empty">Ничего не запланировано.</string>
     <string name="widget_add">Добавить напоминание</string>
+    <string name="update_latest">У вас последняя версия.</string>
+    <string name="update_failed">Не удалось проверить обновления. Проверьте соединение и повторите.</string>
+    <string name="update_available">Доступна версия %1$s.</string>
+    <string name="update_downloading">Загрузка… %1$d%%</string>
+    <string name="update_need_permission">Разрешите Kairos устанавливать обновления и вернитесь.</string>
+    <string name="update_install">Скачать и установить</string>
+    <string name="update_allow">Разрешить установку</string>
+    <string name="update_checking">Проверка…</string>
+    <string name="perm_battery">Работа без ограничений батареи</string>
 </resources>

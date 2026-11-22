@@ -152,4 +152,13 @@
     <string name="widget_desc">Sıradaki hatırlatmalarına tek bakışta ulaş. Yapıldı işaretlemek için daireye dokun.</string>
     <string name="widget_empty">Planlı bir şey yok.</string>
     <string name="widget_add">Hatırlatma ekle</string>
+    <string name="update_latest">En güncel sürümü kullanıyorsun.</string>
+    <string name="update_failed">Güncelleme kontrol edilemedi. Bağlantını kontrol edip tekrar dene.</string>
+    <string name="update_available">%1$s sürümü hazır.</string>
+    <string name="update_downloading">İndiriliyor… %%%1$d</string>
+    <string name="update_need_permission">Kairos\'un güncelleme kurmasına izin ver, sonra geri dön.</string>
+    <string name="update_install">İndir ve kur</string>
+    <string name="update_allow">Kuruluma izin ver</string>
+    <string name="update_checking">Kontrol ediliyor…</string>
+    <string name="perm_battery">Pil kısıtlaması olmadan çalış</string>
 </resources>

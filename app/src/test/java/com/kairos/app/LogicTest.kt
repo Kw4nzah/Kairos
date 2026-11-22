@@ -102,4 +102,12 @@ class LogicTest {
         assertEquals(1, Tone.pickIndex(3, 1))
         assertEquals(2, Tone.pickIndex(3, -1))
     }
+
+    @Test
+    fun updaterVersionComparison() {
+        assertTrue(com.kairos.app.system.Updater.isNewer("1.3.0", "1.2.0"))
+        assertTrue(com.kairos.app.system.Updater.isNewer("1.10.0", "1.9.9"))
+        assertFalse(com.kairos.app.system.Updater.isNewer("1.2.0", "1.2.0"))
+        assertFalse(com.kairos.app.system.Updater.isNewer("1.1.9", "1.2.0"))
+    }
 }

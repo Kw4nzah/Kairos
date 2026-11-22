@@ -13,7 +13,7 @@
   <a href="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml"><img alt="CI" src="https://github.com/Kw4nzah/Kairos/actions/workflows/android.yml/badge.svg"></a>
   <img alt="Platform: Android 8+" src="https://img.shields.io/badge/platform-Android%208%2B-A9B99A">
   <img alt="Languages: English, Turkish, Russian" src="https://img.shields.io/badge/languages-EN%20%C2%B7%20TR%20%C2%B7%20RU-D7B978">
-  <img alt="Offline, no accounts, no analytics" src="https://img.shields.io/badge/privacy-offline%20%C2%B7%20no%20tracking-625B52">
+  <img alt="No accounts, no analytics" src="https://img.shields.io/badge/privacy-no%20accounts%20%C2%B7%20no%20tracking-625B52">
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
 
 Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
 
-**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.2.0.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.3.0.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. APK debug anahtarıyla imzalıdır, Play Protect onay isteyebilir.
 
 
 ## Durum
@@ -52,13 +52,13 @@ Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatı
 - **Hardcore modu.** İsteğe bağlı. Her hatırlatmayı telefondaki yerel bir "Kairos" takvimine yansıtır (10 dk önce ve tam zamanında alarm), böylece sistem takvimi üzerinden de çalar. Takvim izni gerekir; kapatınca kayıtlar silinir.
 - **Alarm penceresi.** Ana hatırlatmadan itibaren kilit ekranının ve diğer uygulamaların üstünde tam ekran bir pencere açılır; Geri tuşu kapatmaz, yalnızca ertele ya da tamam kapatır. "Diğer uygulamaların üzerinde göster" izni gerekir (Ayarlar → İzinler).
 - **Ana ekran widget'ı.** Sıradaki hatırlatmalar tek bakışta; daireye dokunup yapıldı işaretle, "+" ile yenisini ekle. Boyutlandırılabilir, açık/koyu temaya uyar.
-- **Güncelleme kontrolü.** Ayarlar → Hakkında sürümü gösterir ve son sürüm sayfasını açar (uygulamanın kendisinde hâlâ ağ izni yok).
+- **Uygulama içi güncelleme.** Ayarlar → Hakkında en son GitHub sürümünü kontrol eder, senin için indirip kurabilir (SHA-256 doğrulamalı; Android yine onay ister).
 - **Görev ve takvim görünümleri.** Bugün / yaklaşan / tamamlanan listeleri ve gün işaretli aylık takvim. Tarihler, ay ve gün adları ile haftanın ilk günü seçili dile uyar.
 - **Tema seçimi.** Ayarlar'dan sistemi izle, açık veya koyu temayı zorla.
 - **Diller.** İngilizce, Rusça ve Türkçe. Varsayılan olarak Kairos sistem dilini izler; Ayarlar'daki dil bölümü (Sistem / English / Türkçe / Русский) Android'in uygulama başına dil desteğiyle anında uygulanır. Bildirimler ve takvim kayıtları da seçilen dili kullanır.
-- **Tamamen çevrimdışı.** `INTERNET` izni yok, hesap yok, analitik yok. Veriler yerel bir veritabanında kalır.
+- **Gizlilik odaklı.** Hesap yok, analitik yok. Veriler yerel bir veritabanında kalır. Tek ağ kullanımı güncelleme kontrolüdür; GitHub ile konuşur ve senin hakkında hiçbir şey göndermez.
 
-Kullanılan izinler: bildirimler, tam zamanlı alarm, tam ekran niyeti, açılış tamamlandı (yeniden zamanlamak için), titreşim ve takvim okuma/yazma (yalnızca Hardcore modu).
+Kullanılan izinler: bildirimler, tam zamanlı alarm, tam ekran niyeti, diğer uygulamaların üzerinde gösterme (alarm penceresi), açılış tamamlandı (yeniden zamanlamak için), titreşim, internet ve paket kurma (yalnızca güncelleme), pil kısıtlaması muafiyeti (isteğe bağlı) ve takvim okuma/yazma (yalnızca Hardcore modu).
 
 ## Ekran görüntüleri
 

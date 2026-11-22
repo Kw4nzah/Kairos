@@ -13,13 +13,18 @@ android {
         applicationId = "com.kairos.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 4
+        versionName = (project.findProperty("vname") as String?) ?: "1.3.0"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Signed with the debug key on purpose: it is the key of every build handed out so far,
+            // so in-app updates keep installing over the existing app.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
