@@ -171,4 +171,22 @@
     <string name="test_alarm">Test the alarm (15 s, lock your phone)</string>
     <string name="test_alarm_title">Test alarm</string>
     <string name="test_alarm_started">Test alarm in 15 seconds.</string>
+    <string name="onb_welcome_title">Reminders that don\'t let go</string>
+    <string name="onb_welcome_body">Kairos nudges you before the moment, at the moment and after it, and keeps going until you answer. Everything stays on your phone.</string>
+    <string name="onb_f1">A heads-up 10 minutes before, the reminder on time, and a check 5 minutes after</string>
+    <string name="onb_f2">Sound, vibration and a popup that stay until you snooze or finish</string>
+    <string name="onb_f3">Repeats, a calendar and a home-screen widget</string>
+    <string name="onb_next">Continue</string>
+    <string name="onb_back">Back</string>
+    <string name="onb_name_title">What should I call you?</string>
+    <string name="onb_perm_title">Let reminders get through</string>
+    <string name="onb_perm_body">Phones quiet apps to save battery. These permissions make sure an alarm reaches you, even with the screen off.</string>
+    <string name="onb_perm_notif">Show reminders at all</string>
+    <string name="onb_perm_overlay">Open the alarm popup and wake the screen</string>
+    <string name="onb_perm_fullscreen">Show the alarm on the lock screen</string>
+    <string name="onb_perm_exact">Fire reminders at the exact minute</string>
+    <string name="onb_perm_battery">Keep alarms on time when the phone is idle</string>
+    <string name="onb_perm_xiaomi">Allow pop-ups in background and lock screen</string>
+    <string name="onb_perm_later">You can change all of these later in Settings.</string>
+    <string name="onb_finish">Let\'s go</string>
 </resources>
