@@ -49,10 +49,11 @@ fun TasksScreen(
     val titleToday = stringResource(R.string.section_today)
     val titleUpcoming = stringResource(R.string.section_upcoming)
     val titleDone = stringResource(R.string.section_done)
-    val open = reminders.filter { !it.done }
-    val dueToday = open.filter { !Fmt.local(it.dueAt).toLocalDate().isAfter(today) }
-    val upcoming = open.filter { Fmt.local(it.dueAt).toLocalDate().isAfter(today) }
-    val done = reminders.filter { it.done }.sortedByDescending { it.doneAt ?: 0L }
+    val (dueToday, upcoming, done) = remember(reminders, today) {
+        val (finished, open) = reminders.partition { it.done }
+        val (later, due) = open.partition { Fmt.local(it.dueAt).toLocalDate().isAfter(today) }
+        Triple(due, later, finished.sortedByDescending { it.doneAt ?: 0L })
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),

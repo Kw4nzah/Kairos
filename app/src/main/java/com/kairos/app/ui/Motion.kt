@@ -25,6 +25,7 @@ import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -62,7 +63,8 @@ fun StatusBarScrim(fade: Dp = 24.dp, modifier: Modifier = Modifier) {
         modifier
             .fillMaxWidth()
             .height(total)
-            .drawWithContent {
+            // The gradient is built once per size or colour, not on every frame.
+            .drawWithCache {
                 val solid = if (size.height > 0f) top / size.height else 1f
                 val stops = ArrayList<Pair<Float, Color>>()
                 stops += 0f to bg
@@ -75,7 +77,8 @@ fun StatusBarScrim(fade: Dp = 24.dp, modifier: Modifier = Modifier) {
                         stops += (solid + (1f - solid) * t) to bg.copy(alpha = 1f - smooth)
                     }
                 }
-                drawRect(Brush.verticalGradient(colorStops = stops.toTypedArray()))
+                val brush = Brush.verticalGradient(colorStops = stops.toTypedArray())
+                onDrawBehind { drawRect(brush) }
             }
     )
 }

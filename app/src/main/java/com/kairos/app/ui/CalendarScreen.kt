@@ -79,8 +79,9 @@ fun CalendarScreen(
     val firstDay = Fmt.firstDayOfWeek(ctx)
     val weekDays = DayOfWeek.entries.let { all -> all.drop(firstDay.ordinal) + all.take(firstDay.ordinal) }
 
-    val dayItems = reminders.filter { occurs(it, selected) }
-        .sortedBy { Fmt.local(it.dueAt).toLocalTime() }
+    val dayItems = remember(reminders, selected) {
+        reminders.filter { occurs(it, selected) }.sortedBy { Fmt.local(it.dueAt).toLocalTime() }
+    }
 
     LazyColumn(
         contentPadding = PaddingValues(
@@ -138,6 +139,9 @@ fun CalendarScreen(
             val cells: List<LocalDate?> =
                 List<LocalDate?>(offset) { null } + (1..month.lengthOfMonth()).map<Int, LocalDate?> { month.atDay(it) }
             val padded: List<LocalDate?> = cells + List<LocalDate?>((7 - cells.size % 7) % 7) { null }
+            val marked = remember(reminders, month) {
+                (1..month.lengthOfMonth()).map { month.atDay(it) }.filterTo(HashSet()) { d -> reminders.any { occurs(it, d) } }
+            }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 for (week in padded.chunked(7)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -147,7 +151,7 @@ fun CalendarScreen(
                                     day = d,
                                     isSelected = d == selected,
                                     isToday = d == today,
-                                    hasItems = reminders.any { occurs(it, d) },
+                                    hasItems = d in marked,
                                     onClick = { selectedEpochDay = d.toEpochDay() }
                                 )
                             }
