@@ -1,10 +1,12 @@
 package com.kairos.app.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 // Brand palette: deep teal + warm amber on paper / ink neutrals. Dynamic color is intentionally off.
@@ -71,8 +73,9 @@ private val DarkColors = darkColorScheme(
 
 @Composable
 fun KairosTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        content = content
-    )
+    val scheme = if (darkTheme) DarkColors else LightColors
+    MaterialTheme(colorScheme = scheme) {
+        // MaterialTheme alone leaves the content colour black. Screens drawn on a plain Box need this default.
+        CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
+    }
 }
