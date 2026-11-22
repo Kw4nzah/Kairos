@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>**Установка:** скачайте `Kairos-1.3.3.apk` из [последнего релиза](https://github.com/Kw4nzah/Kairos/releases/latest), откройте на телефоне и при запросе разрешите установку из браузера или файлового менеджера. APK подписан отладочным ключом, поэтому Play Protect может попросить подтверждение.</b></a>
+  <a href="https://github.com/Kw4nzah/Kairos/releases/latest"><b>**Установка:** скачайте `Kairos-1.3.4.apk` из [последнего релиза](https://github.com/Kw4nzah/Kairos/releases/latest), откройте на телефоне и при запросе разрешите установку из браузера или файлового менеджера. APK подписан отладочным ключом, поэтому Play Protect может попросить подтверждение.</b></a>
   ·
   <a href="README.md">English</a>
   ·

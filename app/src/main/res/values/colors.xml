@@ -2,4 +2,5 @@
 <resources>
     <color name="kairos_window_bg">#FFF8F6F1</color>
     <color name="kairos_icon_bg">#FF0B4F4B</color>
+    <color name="kairos_splash_bg">#FF0B4F4B</color>
 </resources>

@@ -4,7 +4,7 @@
         <item name="android:windowBackground">#FF161210</item>
     </style>
     <style name="Theme.Kairos.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/kairos_icon_bg</item>
+        <item name="windowSplashScreenBackground">@color/kairos_splash_bg</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.Kairos</item>
     </style>

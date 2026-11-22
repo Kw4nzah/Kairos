@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark splash follows the dark palette (warm brown); the launcher icon keeps its teal. -->
+    <color name="kairos_splash_bg">#FF161210</color>
+</resources>
