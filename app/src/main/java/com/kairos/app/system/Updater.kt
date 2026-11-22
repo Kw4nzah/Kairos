@@ -13,8 +13,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 
-/** A newer release found on GitHub. [sha256] is the asset digest published by GitHub, when present. */
-data class UpdateInfo(val version: String, val url: String, val sha256: String?, val size: Long)
+/** A newer release found on GitHub. [sha256] is the asset digest GitHub publishes; installing requires it. */
+data class UpdateInfo(val version: String, val url: String, val sha256: String, val size: Long)
 
 /**
  * In-app updater. Talks only to the project's public GitHub releases; nothing about the user or the
@@ -33,16 +33,17 @@ object Updater {
         for (i in 0 until assets.length()) {
             val a = assets.getJSONObject(i)
             if (a.getString("name").endsWith(".apk")) {
+                val digest = a.optString("digest")
+                if (!digest.startsWith("sha256:")) error("release has no SHA-256 digest")
                 return@withContext UpdateInfo(
-                    version, a.getString("browser_download_url"),
-                    a.optString("digest").removePrefix("sha256:").ifBlank { null }, a.optLong("size")
+                    version, a.getString("browser_download_url"), digest.removePrefix("sha256:"), a.optLong("size")
                 )
             }
         }
         null
     }
 
-    /** Downloads the APK into the app cache, reporting 0..1 progress, and verifies the digest if known. */
+    /** Downloads the APK into the app cache, reporting 0..1 progress, and verifies its digest. */
     suspend fun download(ctx: Context, info: UpdateInfo, onProgress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
         val dir = File(ctx.cacheDir, "updates").apply { deleteRecursively(); mkdirs() }
         val out = File(dir, "Kairos-${info.version}.apk")
@@ -64,7 +65,7 @@ object Updater {
             }
         } finally { c.disconnect() }
         val hex = md.digest().joinToString("") { "%02x".format(it) }
-        if (info.sha256 != null && !hex.equals(info.sha256, ignoreCase = true)) {
+        if (!hex.equals(info.sha256, ignoreCase = true)) {
             out.delete()
             error("checksum mismatch")
         }
