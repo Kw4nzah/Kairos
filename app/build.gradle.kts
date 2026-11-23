@@ -13,10 +13,24 @@ android {
         applicationId = "com.kairos.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 12
+        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 13
         // The libraries ship some 80 languages; Kairos has three.
         resourceConfigurations += listOf("en", "tr", "ru")
-        versionName = (project.findProperty("vname") as String?) ?: "1.4.3"
+        versionName = (project.findProperty("vname") as String?) ?: "1.4.4"
+    }
+
+    // The release key lives outside the repo (default ~/.kairos-signing/kairos.p12 + password.txt,
+    // or -PkairosKeyDir=<dir>). Builds up to 1.4.3 were signed with a debug key; 1.4.4 switched for good.
+    val keyDir = file((project.findProperty("kairosKeyDir") as String?) ?: "${System.getProperty("user.home")}/.kairos-signing")
+    signingConfigs {
+        create("release") {
+            storeFile = File(keyDir, "kairos.p12")
+            storeType = "PKCS12"
+            val pw = File(keyDir, "password.txt").takeIf { it.isFile }?.readText()?.trim()
+            storePassword = pw
+            keyPassword = pw
+            keyAlias = "kairos"
+        }
     }
 
     buildTypes {
@@ -24,9 +38,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signed with the debug key on purpose: it is the key of every build handed out so far,
-            // so in-app updates keep installing over the existing app.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

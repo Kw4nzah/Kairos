@@ -29,7 +29,7 @@
 
 Kairos is an Android reminder app written in Kotlin with Jetpack Compose (Material 3). It does not chime once and go quiet: every reminder becomes a small escalating chain of sticky notifications, in one clear, friendly tone. Available in English, Russian and Turkish.
 
-**Install:** download `Kairos-1.4.3.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. The APK is signed with a debug key, so Play Protect may ask for confirmation.
+**Install:** download `Kairos-1.4.4.apk` from the [latest release](https://github.com/Kw4nzah/Kairos/releases/latest), open it on your phone and allow installs from your browser or file manager when asked. Since 1.4.4 the APK is signed with Kairos's own release key. If you have 1.4.3 or older installed, uninstall it first (the old builds used a debug key, and Android won't update across keys); your reminders on that install are lost.
 
 ## Status
 
@@ -76,7 +76,7 @@ Requirements: JDK 17, Android SDK (compileSdk 35, minSdk 26), Gradle 8.9. The re
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 
 gradle :app:testDebugUnitTest     # unit tests
-gradle :app:assembleRelease       # app/build/outputs/apk/release/*.apk (signed with the local debug key)
+gradle :app:assembleRelease       # app/build/outputs/apk/release/*.apk (signed with the release key in ~/.kairos-signing, or -PkairosKeyDir)
 gradle :app:lintDebug             # lint (missing translations, hardcoded text, ...)
 ```
 
