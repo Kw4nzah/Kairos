@@ -29,7 +29,7 @@
 
 Kairos, Kotlin ve Jetpack Compose (Material 3) ile yazılmış bir Android hatırlatıcı uygulamasıdır. Bir kez çalıp susmaz: her hatırlatma, tek bir net ve samimi tonda, giderek yükselen yapışkan bildirimlerden oluşan küçük bir zincire dönüşür. İngilizce, Rusça ve Türkçe kullanılabilir.
 
-**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.4.4.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. 1.4.4'ten itibaren APK, Kairos'un kendi anahtarıyla imzalı. 1.4.3 veya daha eskisi kuruluysa önce onu kaldır (eski sürümler debug anahtarıyla imzalıydı, Android anahtarlar arası güncelleme yapmaz); o kurulumdaki hatırlatıcılar silinir.
+**Kurulum:** [son sürümden](https://github.com/Kw4nzah/Kairos/releases/latest) `Kairos-1.4.5.apk` dosyasını indir, telefonda aç ve istenirse tarayıcın veya dosya yöneticin için bilinmeyen kaynaklardan kurulumuna izin ver. 1.4.4'ten itibaren APK, Kairos'un kendi anahtarıyla imzalı. 1.4.3 veya daha eskisi kuruluysa önce onu kaldır (eski sürümler debug anahtarıyla imzalıydı, Android anahtarlar arası güncelleme yapmaz); o kurulumdaki hatırlatıcılar silinir.
 
 
 ## Durum
