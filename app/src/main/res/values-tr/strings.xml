@@ -159,6 +159,9 @@
     <string name="widget_ringing_for">%s süredir</string>
     <string name="widget_done">Yaptım</string>
     <string name="widget_mark_done">Yapıldı işaretle</string>
+    <string name="widget_snooze_5_short">5 dk</string>
+    <string name="widget_snooze_10_short">10 dk</string>
+    <string name="widget_then">Sonra %s</string>
     <string name="update_latest">En güncel sürümü kullanıyorsun.</string>
     <string name="update_failed">Güncelleme kontrol edilemedi. Bağlantını kontrol edip tekrar dene.</string>
     <string name="update_available">%1$s sürümü hazır.</string>

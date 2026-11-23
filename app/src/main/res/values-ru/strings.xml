@@ -159,6 +159,9 @@
     <string name="widget_ringing_for">уже %s</string>
     <string name="widget_done">Готово</string>
     <string name="widget_mark_done">Отметить выполненным</string>
+    <string name="widget_snooze_5_short">5 мин</string>
+    <string name="widget_snooze_10_short">10 мин</string>
+    <string name="widget_then">Потом %s</string>
     <string name="update_latest">У тебя последняя версия.</string>
     <string name="update_failed">Не удалось проверить обновления. Проверь соединение и повтори.</string>
     <string name="update_available">Доступна версия %1$s.</string>

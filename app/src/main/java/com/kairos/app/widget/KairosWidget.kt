@@ -11,12 +11,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
@@ -25,6 +27,7 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity as actionStartIntent
@@ -96,6 +99,9 @@ private val Reminder.effectiveAt: Long get() = snoozeUntil ?: dueAt
  * each with a ring to mark it done; "+" adds one.
  */
 class KairosWidget : GlanceAppWidget() {
+    // The layout is picked from the widget's size: SMALL is about 2x2, MEDIUM 4x2, TALL 4x3 and up.
+    override val sizeMode = SizeMode.Responsive(setOf(SMALL, MEDIUM, TALL))
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val dao = AppDatabase.get(context).dao()
         val prefs = Prefs(context)
@@ -106,8 +112,18 @@ class KairosWidget : GlanceAppWidget() {
             val ctx = widgetContext(context, settings?.language ?: AppLanguage.SYSTEM)
             val now = System.currentTimeMillis()
             val open = all.filter { !it.done }.sortedBy { it.effectiveAt }
-            Body(ctx, open.firstOrNull(), open.drop(1).take(30), now)
+            val size = LocalSize.current
+            when {
+                size.width < MEDIUM.width -> SmallBody(ctx, open.firstOrNull(), open.getOrNull(1), now)
+                else -> Body(ctx, open.firstOrNull(), open.drop(1).take(30), now, byDay = size.height >= TALL.height)
+            }
         }
+    }
+
+    companion object {
+        private val SMALL = DpSize(110.dp, 110.dp)
+        private val MEDIUM = DpSize(250.dp, 110.dp)
+        private val TALL = DpSize(250.dp, 250.dp)
     }
 }
 
@@ -124,8 +140,86 @@ private fun widgetContext(context: Context, stored: AppLanguage): Context {
     return Locales.localized(context, lang)
 }
 
+/** 2x2: only the most pressing reminder, its snooze buttons while it rings, else one line about the next. */
 @Composable
-private fun Body(ctx: Context, hero: Reminder?, rest: List<Reminder>, now: Long) {
+private fun SmallBody(ctx: Context, hero: Reminder?, next: Reminder?, now: Long) {
+    val openApp = actionStartActivity<MainActivity>()
+    Column(GlanceModifier.fillMaxSize().background(BG).cornerRadius(28.dp).padding(14.dp)) {
+        if (hero == null) {
+            Column(
+                GlanceModifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically, horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(ImageProvider(R.drawable.widget_logo), null, GlanceModifier.size(36.dp).clickable(openApp))
+                Spacer(GlanceModifier.height(8.dp))
+                Text(ctx.getString(R.string.widget_empty), maxLines = 2, style = TextStyle(color = MUTED, fontSize = 14.sp))
+                Spacer(GlanceModifier.height(8.dp))
+                AddButton(ctx)
+            }
+            return@Column
+        }
+        val ringing = hero.effectiveAt <= now
+        val snoozed = hero.snoozeUntil != null && !ringing
+        Column(GlanceModifier.fillMaxWidth().defaultWeight().clickable(openApp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    ImageProvider(if (ringing) R.drawable.widget_logo_alert else R.drawable.widget_logo),
+                    null, GlanceModifier.size(28.dp)
+                )
+                Spacer(GlanceModifier.width(8.dp))
+                Text(heroLabel(ctx, hero, ringing, snoozed), maxLines = 1, style = TextStyle(color = if (ringing) ALERT else MUTED, fontSize = 13.sp))
+            }
+            Spacer(GlanceModifier.height(4.dp))
+            BigTime(ctx, hero.effectiveAt)
+            Text(hero.title, maxLines = 1, style = TextStyle(color = INK, fontSize = 16.sp, fontWeight = FontWeight.Medium))
+            if (!ringing) HeroDetail(ctx, hero, false, snoozed, now)
+        }
+        if (ringing) {
+            Spacer(GlanceModifier.height(8.dp))
+            SnoozeButtons(ctx, hero, short = true)
+        } else if (next != null) {
+            val at = next.effectiveAt
+            // Mid-sentence "tomorrow" is lower case; a date label ("Thu 26 Nov") keeps its capitals.
+            val day = dayLabel(ctx, at)?.let {
+                if (it == ctx.getString(R.string.day_tomorrow)) it.lowercase(Fmt.locale(ctx)) else it
+            }
+            val time = listOfNotNull(day, Fmt.time(ctx, Fmt.local(at))).joinToString(" ")
+            Text(
+                ctx.getString(R.string.widget_then, "$time ${next.title}"), maxLines = 2,
+                modifier = GlanceModifier.clickable(openApp),
+                style = TextStyle(color = MUTED, fontSize = 13.sp)
+            )
+        }
+    }
+}
+
+private fun heroLabel(ctx: Context, r: Reminder, ringing: Boolean, snoozed: Boolean): String = when {
+    ringing -> ctx.getString(R.string.widget_now)
+    snoozed -> ctx.getString(R.string.widget_snoozed, r.snoozeCount)
+    else -> ctx.getString(R.string.widget_next)
+}
+
+/** A row of the 4x3 list: a day heading or a reminder. */
+private sealed interface Item {
+    data class Day(val label: String) : Item
+    data class Entry(val r: Reminder) : Item
+}
+
+/** Groups the list by day; today's reminders come first and need no heading. */
+private fun groupByDay(ctx: Context, rest: List<Reminder>): List<Item> {
+    val out = mutableListOf<Item>()
+    var last: String? = null
+    rest.forEachIndexed { i, r ->
+        val label = dayLabel(ctx, r.effectiveAt)
+        if (label != last && (label != null || i > 0)) out += Item.Day(label ?: ctx.getString(R.string.day_today))
+        last = label
+        out += Item.Entry(r)
+    }
+    return out
+}
+
+@Composable
+private fun Body(ctx: Context, hero: Reminder?, rest: List<Reminder>, now: Long, byDay: Boolean) {
     val openApp = actionStartActivity<MainActivity>()
     Column(GlanceModifier.fillMaxSize().background(BG).cornerRadius(28.dp).padding(16.dp)) {
         if (hero == null) {
@@ -153,9 +247,29 @@ private fun Body(ctx: Context, hero: Reminder?, rest: List<Reminder>, now: Long)
             Spacer(GlanceModifier.height(12.dp))
             Box(GlanceModifier.fillMaxWidth().height(1.dp).background(LINE)) {}
         }
-        if (rest.isNotEmpty()) {
+        if (rest.isNotEmpty() && byDay) {
+            val items = groupByDay(ctx, rest)
             LazyColumn(GlanceModifier.fillMaxSize()) {
-                items(rest, itemId = { it.id.toLong() }) { r -> ListRow(ctx, r, now, openApp) }
+                items(items, itemId = { item ->
+                    when (item) {
+                        is Item.Entry -> item.r.id.toLong()
+                        // Headings get negative ids so they never clash with a reminder id.
+                        is Item.Day -> -1L - items.indexOf(item)
+                    }
+                }) { item ->
+                    when (item) {
+                        is Item.Day -> Text(
+                            item.label, maxLines = 1,
+                            modifier = GlanceModifier.padding(top = 12.dp, bottom = 2.dp),
+                            style = TextStyle(color = MUTED, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        )
+                        is Item.Entry -> ListRow(ctx, item.r, now, openApp, showDay = false)
+                    }
+                }
+            }
+        } else if (rest.isNotEmpty()) {
+            LazyColumn(GlanceModifier.fillMaxSize()) {
+                items(rest, itemId = { it.id.toLong() }) { r -> ListRow(ctx, r, now, openApp, showDay = true) }
             }
         }
     }
@@ -164,11 +278,7 @@ private fun Body(ctx: Context, hero: Reminder?, rest: List<Reminder>, now: Long)
 @Composable
 private fun Hero(ctx: Context, r: Reminder, ringing: Boolean, now: Long, openApp: Action) {
     val snoozed = r.snoozeUntil != null && !ringing
-    val label = when {
-        ringing -> ctx.getString(R.string.widget_now)
-        snoozed -> ctx.getString(R.string.widget_snoozed, r.snoozeCount)
-        else -> ctx.getString(R.string.widget_next)
-    }
+    val label = heroLabel(ctx, r, ringing, snoozed)
     Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Row(GlanceModifier.defaultWeight().clickable(openApp), verticalAlignment = Alignment.CenterVertically) {
             Image(
@@ -245,17 +355,20 @@ private fun AddButton(ctx: Context) {
 }
 
 @Composable
-private fun SnoozeButtons(ctx: Context, r: Reminder) {
+private fun SnoozeButtons(ctx: Context, r: Reminder, short: Boolean = false) {
     val actions = SnoozeMachine.actions(r.snoozeCount)
     Row(GlanceModifier.fillMaxWidth()) {
         actions.forEachIndexed { i, action ->
-            if (i > 0) Spacer(GlanceModifier.width(10.dp))
+            if (i > 0) Spacer(GlanceModifier.width(if (short) 8.dp else 10.dp))
             val primary = i == 0
             val text = ctx.getString(
                 when (action) {
-                    SnoozeMachine.Action.SNOOZE_5 -> R.string.action_snooze_5
-                    SnoozeMachine.Action.SNOOZE_10 ->
-                        if (r.snoozeCount >= SnoozeMachine.MAX_SNOOZES) R.string.action_snooze_10_more else R.string.action_snooze_10
+                    SnoozeMachine.Action.SNOOZE_5 -> if (short) R.string.widget_snooze_5_short else R.string.action_snooze_5
+                    SnoozeMachine.Action.SNOOZE_10 -> when {
+                        short -> R.string.widget_snooze_10_short
+                        r.snoozeCount >= SnoozeMachine.MAX_SNOOZES -> R.string.action_snooze_10_more
+                        else -> R.string.action_snooze_10
+                    }
                     SnoozeMachine.Action.DONE -> R.string.widget_done
                 }
             )
@@ -263,7 +376,7 @@ private fun SnoozeButtons(ctx: Context, r: Reminder) {
                 idKey to r.id, dueKey to r.dueAt, countKey to r.snoozeCount, actionKey to action.name
             )
             Box(
-                GlanceModifier.defaultWeight().height(48.dp).cornerRadius(24.dp)
+                GlanceModifier.defaultWeight().height(if (short) 40.dp else 48.dp).cornerRadius(if (short) 20.dp else 24.dp)
                     .background(if (primary) ACCENT else CARD)
                     .clickable(actionRunCallback<SnoozeCallback>(params)),
                 contentAlignment = Alignment.Center
@@ -280,11 +393,12 @@ private fun SnoozeButtons(ctx: Context, r: Reminder) {
 }
 
 @Composable
-private fun ListRow(ctx: Context, r: Reminder, now: Long, openApp: Action) {
+private fun ListRow(ctx: Context, r: Reminder, now: Long, openApp: Action, showDay: Boolean) {
     val at = r.effectiveAt
     val overdue = at <= now
     val type = RepeatType.parse(r.repeatType)
-    val side = dayLabel(ctx, at) ?: if (type != RepeatType.NONE) Fmt.repeatLabel(ctx, type, r.weekdays) else ""
+    val repeat = if (type != RepeatType.NONE) Fmt.repeatLabel(ctx, type, r.weekdays) else ""
+    val side = (if (showDay) dayLabel(ctx, at) else null) ?: repeat
     Row(GlanceModifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Row(GlanceModifier.defaultWeight().clickable(openApp), verticalAlignment = Alignment.CenterVertically) {
             Text(

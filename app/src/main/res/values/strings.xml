@@ -165,6 +165,9 @@
     <string name="widget_ringing_for">for %s</string>
     <string name="widget_done">Done</string>
     <string name="widget_mark_done">Mark done</string>
+    <string name="widget_snooze_5_short">5 min</string>
+    <string name="widget_snooze_10_short">10 min</string>
+    <string name="widget_then">Then %s</string>
     <string name="update_latest">You\'re on the latest version.</string>
     <string name="update_failed">Couldn\'t check for updates. Check your connection and try again.</string>
     <string name="update_available">Version %1$s is available.</string>
