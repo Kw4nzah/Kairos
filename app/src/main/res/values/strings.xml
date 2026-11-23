@@ -158,6 +158,13 @@
     <string name="widget_desc">Your next reminders at a glance. Tap the circle to mark one done.</string>
     <string name="widget_empty">Nothing planned.</string>
     <string name="widget_add">Add reminder</string>
+    <string name="widget_next">Next</string>
+    <string name="widget_now">Ringing</string>
+    <string name="widget_snoozed">Snoozed (%1$d)</string>
+    <string name="widget_left">%s left</string>
+    <string name="widget_ringing_for">for %s</string>
+    <string name="widget_done">Done</string>
+    <string name="widget_mark_done">Mark done</string>
     <string name="update_latest">You\'re on the latest version.</string>
     <string name="update_failed">Couldn\'t check for updates. Check your connection and try again.</string>
     <string name="update_available">Version %1$s is available.</string>

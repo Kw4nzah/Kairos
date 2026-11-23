@@ -3,4 +3,8 @@
     <!-- Dark splash follows the dark palette (warm brown); the launcher icon keeps its teal. -->
     <color name="kairos_splash_bg">#FF161210</color>
     <color name="kairos_splash_accent">#FFD7B978</color>
+    <color name="widget_muted">#FFC4BDB5</color>
+    <color name="widget_ring">#FFC4BDB5</color>
+    <color name="widget_alert">#FFE59A9A</color>
+    <color name="widget_gold">#FFD7B978</color>
 </resources>

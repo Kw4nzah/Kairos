@@ -148,6 +148,7 @@ class Repo(context: Context) {
                 dao.update(snoozed)
                 Notifier.cancelAll(ctx, id)
                 Scheduler.schedule(ctx, snoozed) // drops the rest of the chain
+                Widget.refresh(ctx)
             }
         }
     }

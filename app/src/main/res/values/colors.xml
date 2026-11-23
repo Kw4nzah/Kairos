@@ -4,4 +4,9 @@
     <color name="kairos_icon_bg">#FF0B4F4B</color>
     <color name="kairos_splash_bg">#FF0B4F4B</color>
     <color name="kairos_splash_accent">#FFF2BC6B</color>
+    <!-- Widget palette; same values as the Glance ColorProviders in KairosWidget.kt. -->
+    <color name="widget_muted">#FF5F6967</color>
+    <color name="widget_ring">#FF4A5553</color>
+    <color name="widget_alert">#FFB3261E</color>
+    <color name="widget_gold">#FFD9A441</color>
 </resources>

@@ -152,6 +152,13 @@
     <string name="widget_desc">Ближайшие напоминания с первого взгляда. Нажми на кружок, чтобы отметить выполненным.</string>
     <string name="widget_empty">Ничего не запланировано.</string>
     <string name="widget_add">Добавить напоминание</string>
+    <string name="widget_next">Далее</string>
+    <string name="widget_now">Звонит</string>
+    <string name="widget_snoozed">Отложено (%1$d)</string>
+    <string name="widget_left">осталось %s</string>
+    <string name="widget_ringing_for">уже %s</string>
+    <string name="widget_done">Готово</string>
+    <string name="widget_mark_done">Отметить выполненным</string>
     <string name="update_latest">У тебя последняя версия.</string>
     <string name="update_failed">Не удалось проверить обновления. Проверь соединение и повтори.</string>
     <string name="update_available">Доступна версия %1$s.</string>

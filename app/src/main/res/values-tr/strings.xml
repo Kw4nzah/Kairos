@@ -152,6 +152,13 @@
     <string name="widget_desc">Sıradaki hatırlatmalarına tek bakışta ulaş. Yapıldı işaretlemek için daireye dokun.</string>
     <string name="widget_empty">Planlı bir şey yok.</string>
     <string name="widget_add">Hatırlatma ekle</string>
+    <string name="widget_next">Sıradaki</string>
+    <string name="widget_now">Çalıyor</string>
+    <string name="widget_snoozed">Ertelendi (%1$d)</string>
+    <string name="widget_left">%s kaldı</string>
+    <string name="widget_ringing_for">%s süredir</string>
+    <string name="widget_done">Yaptım</string>
+    <string name="widget_mark_done">Yapıldı işaretle</string>
     <string name="update_latest">En güncel sürümü kullanıyorsun.</string>
     <string name="update_failed">Güncelleme kontrol edilemedi. Bağlantını kontrol edip tekrar dene.</string>
     <string name="update_available">%1$s sürümü hazır.</string>
