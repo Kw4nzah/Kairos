@@ -1,6 +1,8 @@
 package com.kairos.app
 
+import android.app.ActivityManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.SystemBarStyle
@@ -34,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         vm.syncLanguageFromSystem()
         // A recreation (theme or language switch) must not replay the widget's "+" that started the activity.
         if (savedInstanceState == null) handleIntent(intent)
+        closeOtherTasks()
         enableEdgeToEdge()
         setContent {
             val settings by vm.settings.collectAsStateWithLifecycle()
@@ -67,6 +70,25 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         handleIntent(intent)
+    }
+
+    /**
+     * The empty task affinity (see the manifest) means a start cannot join a task that Recents kept from
+     * before an app update, so "Open" in the installer made a second Kairos next to the old one. Only one is
+     * kept: this one. The alarm popup's own task is left alone.
+     */
+    private fun closeOtherTasks() {
+        runCatching {
+            val am = getSystemService(ActivityManager::class.java) ?: return
+            for (task in am.appTasks) {
+                val info = task.taskInfo
+                @Suppress("DEPRECATION")
+                val id = if (Build.VERSION.SDK_INT >= 29) info.taskId else info.persistentId
+                if (id != taskId && info.baseIntent.component?.className == MainActivity::class.java.name) {
+                    task.finishAndRemoveTask()
+                }
+            }
+        }
     }
 
     private fun handleIntent(intent: android.content.Intent?) {
