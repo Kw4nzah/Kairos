@@ -9,9 +9,11 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.kairos.app.system.Sounds
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 // An unreadable file (power cut mid-write) would otherwise crash every start and every alarm.
 private val Context.kairosStore by preferencesDataStore(
@@ -100,7 +102,7 @@ class Prefs(context: Context) {
     /** Name, theme and language are also needed to ring before the first unlock (see [LockedStore]). */
     private suspend fun mirror() {
         val now = settings.first()
-        LockedStore.update(ctx) { it?.copy(settings = now) }
+        withContext(Dispatchers.IO) { LockedStore.update(ctx) { it?.copy(settings = now) } }
     }
 
     private companion object {

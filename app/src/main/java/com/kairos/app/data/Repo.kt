@@ -28,7 +28,11 @@ class Repo(context: Context) {
 
     fun observe(): Flow<List<Reminder>> = dao.observeAll()
 
-    suspend fun save(input: Reminder): Unit = write { saveLocked(input) }
+    suspend fun save(input: Reminder): Unit = write {
+        // Edited and saved by the user, the test alarm has become an ordinary reminder: answering must keep it.
+        if (input.id != 0 && input.id == prefs.testReminderId()) prefs.setTestReminderId(null)
+        saveLocked(input)
+    }
 
     /**
      * "Test the alarm": the real chain, 15 seconds from now. Only one exists at a time, and it is deleted as
@@ -54,7 +58,12 @@ class Repo(context: Context) {
         val before = if (input.id == 0) null else dao.get(input.id)
         // Feb 28 may be a clamped "31st". Editing the text alone must not turn it into "the 28th".
         val sameDay = before != null && Instant.ofEpochMilli(before.dueAt).atZone(zone).toLocalDate() == day
+        // Deleted while it was being edited (an answered test alarm): keep the user's edit as a new reminder
+        // instead of updating nothing and arming alarms for a row that no longer exists.
+        val gone = input.id != 0 && before == null
         val toSave = input.copy(
+            id = if (gone) 0 else input.id,
+            calendarEventId = if (gone) null else input.calendarEventId,
             anchorDay = if (sameDay && before?.repeatType == input.repeatType) before.anchorDay else day.dayOfMonth,
             // An unchanged time keeps its wall time, e.g. 02:30 on a DST-gap day that shows as 03:30.
             dueLocal = if (before != null && before.dueAt == input.dueAt && before.dueLocal != null) {
@@ -221,7 +230,7 @@ class Repo(context: Context) {
     private suspend fun reconcile() {
         if (reconciled) return
         reconciled = true
-        val state = LockedStore.read(ctx)
+        val state = withContext(Dispatchers.IO) { LockedStore.read(ctx) }
         if (state == null) {
             changed() // first start of this version, or the copy was lost: make it now
             return
@@ -239,7 +248,7 @@ class Repo(context: Context) {
             Scheduler.schedule(ctx, updated)
             syncCalendar(updated)
         }
-        LockedStore.update(ctx) { it?.copy(dirty = emptySet()) }
+        withContext(Dispatchers.IO) { LockedStore.update(ctx) { it?.copy(dirty = emptySet()) } }
         changed()
     }
 
@@ -247,7 +256,8 @@ class Repo(context: Context) {
     private suspend fun changed() {
         val copy = ReminderState.forLockedMode(dao.getAll(), System.currentTimeMillis())
         val settings = prefs.settings.first()
-        LockedStore.update(ctx) { LockedStore.State(settings, copy) }
+        // Off the main thread: the UI's own saves land here too.
+        withContext(Dispatchers.IO) { LockedStore.update(ctx) { LockedStore.State(settings, copy) } }
         Widget.refresh(ctx)
     }
 
