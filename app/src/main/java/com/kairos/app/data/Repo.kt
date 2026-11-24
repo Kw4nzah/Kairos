@@ -196,7 +196,11 @@ class Repo(context: Context) {
     private suspend fun reconcile() {
         if (reconciled) return
         reconciled = true
-        val state = LockedStore.read(ctx) ?: return
+        val state = LockedStore.read(ctx)
+        if (state == null) {
+            changed() // first start of this version, or the copy was lost: make it now
+            return
+        }
         if (state.dirty.isEmpty()) return
         for (id in state.dirty) {
             val l = state.reminders.firstOrNull { it.id == id } ?: continue
