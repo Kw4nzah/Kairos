@@ -6,6 +6,7 @@ import com.kairos.app.logic.Chain
 import com.kairos.app.logic.Recurrence
 import com.kairos.app.logic.RepeatType
 import com.kairos.app.logic.SnoozeMachine
+import com.kairos.app.logic.WallClock
 import com.kairos.app.system.CalendarSync
 import com.kairos.app.system.Notifier
 import com.kairos.app.system.Scheduler
@@ -36,6 +37,12 @@ class Repo(context: Context) {
         val sameDay = before != null && Instant.ofEpochMilli(before.dueAt).atZone(zone).toLocalDate() == day
         val toSave = input.copy(
             anchorDay = if (sameDay && before?.repeatType == input.repeatType) before.anchorDay else day.dayOfMonth,
+            // An unchanged time keeps its wall time, e.g. 02:30 on a DST-gap day that shows as 03:30.
+            dueLocal = if (before != null && before.dueAt == input.dueAt && before.dueLocal != null) {
+                before.dueLocal
+            } else {
+                WallClock.of(input.dueAt, zone)
+            },
             snoozeCount = 0,
             snoozeUntil = null
         )
@@ -80,14 +87,20 @@ class Repo(context: Context) {
         Notifier.cancelAll(ctx, id)
         Scheduler.cancel(ctx, id)
         val zone = ZoneId.systemDefault()
-        val current = Instant.ofEpochMilli(r.dueAt).atZone(zone).toLocalDateTime()
+        // From the picked clock time, so the next one is at that time in the zone the phone is in now.
+        val current = WallClock.local(r.dueLocal, r.dueAt, zone)
         val next = Recurrence.nextAfter(
             current, LocalDateTime.now(zone), RepeatType.parse(r.repeatType), r.weekdays, r.anchorDay
         )
         val updated = if (next == null) {
             r.copy(done = true, doneAt = System.currentTimeMillis(), snoozeCount = 0, snoozeUntil = null)
         } else {
-            r.copy(dueAt = next.atZone(zone).toInstant().toEpochMilli(), snoozeCount = 0, snoozeUntil = null)
+            r.copy(
+                dueAt = WallClock.toMillis(next, zone),
+                dueLocal = next.toString(),
+                snoozeCount = 0,
+                snoozeUntil = null
+            )
         }
         dao.update(updated)
         if (!updated.done) Scheduler.schedule(ctx, updated)
@@ -154,6 +167,7 @@ class Repo(context: Context) {
     }
 
     suspend fun rescheduleAll(): Unit = writes.withLock {
+        followZone() // the zone may have changed while the phone was off
         val now = System.currentTimeMillis()
         val (waiting, active) = dao.getAll().filter { !it.done }.sortedBy { it.dueAt }
             .partition { Chain.isWaiting(it.dueAt, it.snoozeUntil, now) }
@@ -167,9 +181,31 @@ class Repo(context: Context) {
         Widget.refresh(ctx)
     }
 
+    /**
+     * Clock or zone change. Pending alarms are wall-clock instants and survive it; only reminders that have
+     * not started move to their clock time in the new zone (see [WallClock.follow]).
+     */
     suspend fun onClockChanged(): Unit = writes.withLock {
+        val moved = followZone()
+        // Under the limit each moved one is armed here; above it armNearest picks the nearest.
+        if (dao.getAll().count { !it.done } < Chain.MAX_WAITING) moved.forEach { Scheduler.schedule(ctx, it) }
         armNearest()
         Widget.refresh(ctx)
+    }
+
+    /** Moves waiting reminders to their clock time in the current zone; returns them with alarms cancelled. */
+    private suspend fun followZone(): List<Reminder> {
+        val zone = ZoneId.systemDefault()
+        val now = System.currentTimeMillis()
+        val moved = dao.getAll().filter { !it.done }.mapNotNull { r ->
+            WallClock.follow(r.dueLocal, r.dueAt, r.snoozeUntil, zone, now)?.let { r.copy(dueAt = it) }
+        }
+        for (r in moved) {
+            Scheduler.cancel(ctx, r.id)
+            dao.update(r)
+            syncCalendar(r)
+        }
+        return moved
     }
 
     /** Keeps the pending alarms under Android's limit (see [Chain.MAX_WAITING]); cheap for normal list sizes. */

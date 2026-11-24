@@ -13,8 +13,10 @@ import androidx.room.Update
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.kairos.app.logic.RepeatType
+import com.kairos.app.logic.WallClock
 import com.kairos.app.system.Sounds
 import kotlinx.coroutines.flow.Flow
+import java.time.ZoneId
 
 /**
  * One reminder. [dueAt] is always the CURRENT (next unacknowledged) occurrence;
@@ -36,7 +38,12 @@ data class Reminder(
     val snoozeCount: Int = 0,
     val calendarEventId: Long? = null,
     /** When the snoozed alarm rings. While set, it replaces the rest of the chain. */
-    val snoozeUntil: Long? = null
+    val snoozeUntil: Long? = null,
+    /**
+     * The current occurrence as the user's clock shows it (ISO local date-time, see [WallClock]).
+     * [dueAt] follows it when the time zone changes; null only for rows written before version 3.
+     */
+    val dueLocal: String? = null
 )
 
 @Dao
@@ -64,7 +71,7 @@ interface ReminderDao {
     suspend fun delete(id: Int)
 }
 
-@Database(entities = [Reminder::class], version = 2, exportSchema = false)
+@Database(entities = [Reminder::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): ReminderDao
 
@@ -72,6 +79,21 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE reminders ADD COLUMN snoozeUntil INTEGER")
+            }
+        }
+
+        /** Fills dueLocal with the clock time each reminder shows now, which is what the user picked. */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN dueLocal TEXT")
+                val zone = ZoneId.systemDefault()
+                val rows = ArrayList<Pair<Int, Long>>()
+                db.query("SELECT id, dueAt FROM reminders").use { c ->
+                    while (c.moveToNext()) rows += c.getInt(0) to c.getLong(1)
+                }
+                for ((id, dueAt) in rows) {
+                    db.execSQL("UPDATE reminders SET dueLocal = ? WHERE id = ?", arrayOf(WallClock.of(dueAt, zone), id))
+                }
             }
         }
 
@@ -83,7 +105,7 @@ abstract class AppDatabase : RoomDatabase() {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "kairos.db"
-            ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
         }
     }
 }
