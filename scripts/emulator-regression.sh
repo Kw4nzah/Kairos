@@ -22,6 +22,14 @@ now_ms() { echo "$(sh_ date +%s)000"; }
 pass() { echo "PASS  $1"; }
 fail() { echo "FAIL  $1: $2"; FAILS=$((FAILS + 1)); }
 check() { if [ "$2" = "$3" ]; then pass "$1"; else fail "$1" "expected '$3', got '$2'"; fi; }
+# eventually <name> <expected> <command...>: polls for up to 90 s. Boot and update broadcasts can take
+# half a minute to reach the app on a busy emulator.
+eventually() {
+    local name=$1 want=$2; shift 2
+    local got i
+    for i in $(seq 1 30); do got=$("$@" 2>/dev/null); [ "$got" = "$want" ] && break; sleep 3; done
+    check "$name" "$got" "$want"
+}
 
 cat > "$TMP/ui.py" <<'EOF'
 import sys, re
@@ -47,7 +55,8 @@ coords() { # centre of the element with that text or description, from a fresh d
 }
 tap() { local xy; xy=$(coords "$1"); [ -n "$xy" ] && a shell input tap $xy; }
 resumed() { sh_ dumpsys activity activities | grep -m1 -E "ResumedActivity" | grep -o "$PKG/[.A-Za-z]*"; }
-notifs() { sh_ dumpsys notification | grep -c "pkg=$PKG user"; }
+# Active ones only: older Android also lists recently dismissed ones as StatusBarNotification lines.
+notifs() { sh_ dumpsys notification | grep -c "NotificationRecord(.*pkg=$PKG user"; }
 tasks() { sh_ dumpsys activity recents | grep -c "Recent #.*I=$PKG/.MainActivity"; }
 wait_boot() {
     a wait-for-device
@@ -61,14 +70,27 @@ seed() { # seed <title> <seconds from now> [repeatType]
     a shell am force-stop $PKG
     local secs; secs=$(( $(sh_ date +%s) + $2 ))
     if [ "$(q 'PRAGMA user_version;')" -ge 3 ]; then # the app always stores the wall time from v3 on
-        q "INSERT INTO reminders(title,notes,dueAt,dueLocal,repeatType,weekdays,anchorDay,sound,done,snoozeCount) VALUES('$1','',${secs}000,'$(sh_ date -d @$secs +%Y-%m-%dT%H:%M:%S)','${3:-NONE}',0,1,'bell',0,0);" >/dev/null
+        local wall; wall=$(local_time "$secs")
+        q "INSERT INTO reminders(title,notes,dueAt,dueLocal,repeatType,weekdays,anchorDay,sound,done,snoozeCount) VALUES('$1','',${secs}000,'$wall','${3:-NONE}',0,1,'bell',0,0);" >/dev/null
     else
         q "INSERT INTO reminders(title,notes,dueAt,repeatType,weekdays,anchorDay,sound,done,snoozeCount) VALUES('$1','',${secs}000,'${3:-NONE}',0,1,'bell',0,0);" >/dev/null
     fi
     start_app; resched; a shell input keyevent 3
 }
+# Wall time of epoch second $1 on the device, as the app stores it. Computed here from the device's UTC
+# offset: toybox `date -d @` prints UTC on older Android.
+local_time() {
+    python -c "import sys,datetime as d;o=sys.argv[2];m=(int(o[1:3])*60+int(o[3:5]))*(1 if o[0]=='+' else -1);print(d.datetime.fromtimestamp(int(sys.argv[1]),d.timezone(d.timedelta(minutes=m))).strftime('%Y-%m-%dT%H:%M:%S'))" "$1" "$(sh_ date +%z)"
+}
+# Scrolls a screen's worth, starting above the navigation bar whatever the display height.
+swipe_up() { local h; h=$(sh_ wm size | grep -o '[0-9]*$'); a shell input swipe 540 $((h * 7 / 10)) 540 $((h * 3 / 10)) 300; }
 resched() { a shell am broadcast -a android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED -n $PKG/.system.BootReceiver >/dev/null; sleep 2; }
-reset_data() { a shell am force-stop $PKG; q "DELETE FROM reminders;" >/dev/null; a shell cmd notification cancel_all $PKG >/dev/null 2>&1; start_app; resched; a shell input keyevent 3; }
+# Deletes all reminders behind Room's back and restarts the app (cancel_all does not exist before API 30).
+reset_data() {
+    a shell am force-stop $PKG; q "DELETE FROM reminders;" >/dev/null
+    a shell cmd notification cancel_all $PKG >/dev/null 2>&1 || true
+    start_app; resched; a shell input keyevent 3
+}
 grant() {
     [ "$(api)" -ge 33 ] && a shell pm grant $PKG android.permission.POST_NOTIFICATIONS
     a shell appops set $PKG SYSTEM_ALERT_WINDOW allow
@@ -101,11 +123,12 @@ if [ -n "$OLD" ]; then
     a shell input keyevent 3
     from=$(q 'PRAGMA user_version;')
     a install -r "$NEW" | tail -1; sleep 6
-    check "update: DB at v3" "$(q 'PRAGMA user_version;')" "3"
+    eventually "update: DB at v3" "3" q 'PRAGMA user_version;'
     if [ "$from" = 2 ]; then # updating from 1.4.5 or older: the v2 -> v3 migration
         check "update: wall time filled by migration" "$(q "SELECT dueLocal FROM reminders WHERE title='Before update';" | grep -c T)" "1"
     fi
-    check "update: locked copy written" "$(a shell ls /data/user_de/0/$PKG/files/locked_state.json 2>/dev/null | grep -c locked_state)" "1"
+    copy_exists() { a shell ls /data/user_de/0/$PKG/files/locked_state.json 2>/dev/null | grep -c locked_state; }
+    eventually "update: locked copy written" "1" copy_exists
     # The installer's "Open": NEW_TASK|SINGLE_TOP|CLEAR_TOP with a package.
     a shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p $PKG -f 0x34000000 -n $PKG/.MainActivity >/dev/null; sleep 3
     check "update: one task in recents" "$(tasks)" "1"
@@ -134,9 +157,9 @@ a shell input keyevent 3
 # ---------------------------------------------------------------- reboot restores alarms
 reset_data
 seed "After reboot" 3600
-reboot_; wait_boot; sleep 15
-fires=$(sh_ dumpsys alarm | grep -cE "^ +RTC_WAKEUP #[0-9]+:.*$PKG|walarm\*:$PKG.FIRE")
-[ "$fires" -ge 1 ] && pass "reboot re-arms alarms" || fail "reboot re-arms alarms" "none pending"
+reboot_; wait_boot
+armed() { [ "$(sh_ dumpsys alarm | grep -c "walarm\*:$PKG.FIRE")" -ge 1 ] && echo yes || echo no; }
+eventually "reboot re-arms alarms" "yes" armed
 
 # ---------------------------------------------------------------- time zone
 reset_data
@@ -150,7 +173,7 @@ set_tz Europe/Istanbul
 # ---------------------------------------------------------------- test alarm
 reset_data
 start_app; tap Settings; sleep 1
-for i in 1 2 3; do a shell input swipe 540 1800 540 900 300; done
+for i in 1 2 3; do swipe_up; done
 tap "Test the alarm (15 s, lock your phone)"; sleep 1
 tap "Test the alarm (15 s, lock your phone)"; sleep 1
 check "test alarm: one at a time" "$(q 'SELECT count(*) FROM reminders;')" "1"
@@ -159,6 +182,11 @@ tap "Snooze 5 min"; sleep 3
 check "test alarm: gone after answer" "$(q 'SELECT count(*) FROM reminders;')" "0"
 
 # ---------------------------------------------------------------- direct boot
+# Only with file-based encryption. With full-disk encryption (e.g. the API 26 image) the PIN is asked
+# before Android starts at all, so there is no "booted but locked" phase to test.
+if [ "$(sh_ getprop ro.crypto.type)" != file ]; then
+    echo "SKIP  direct boot: ro.crypto.type=$(sh_ getprop ro.crypto.type)"
+else
 reset_data
 seed "Locked" 75
 a shell locksettings set-pin 1234 >/dev/null
@@ -174,9 +202,10 @@ until [ "$(now_ms)" -gt $((due + 8000)) ]; do sleep 3; done
 check "before unlock: popup over the lock screen" "$(resumed)" "$PKG/.AlarmActivity"
 tap "Snooze 5 min"; sleep 3
 a shell input keyevent 3; sleep 1; a shell input keyevent 82; sleep 2
-a shell input text 1234; a shell input keyevent 66; sleep 25
-check "after unlock: snooze carried over" "$(q "SELECT snoozeCount FROM reminders WHERE title='Locked';")" "1"
+a shell input text 1234; a shell input keyevent 66
+eventually "after unlock: snooze carried over" "1" q "SELECT snoozeCount FROM reminders WHERE title='Locked';"
 a shell locksettings clear --old 1234 >/dev/null
+fi
 
 # ---------------------------------------------------------------- crashes
 check "no crashes in logcat" "$((CRASHES + $(crashes)))" "0"
