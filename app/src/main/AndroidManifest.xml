@@ -50,6 +50,7 @@
         <activity
             android:name=".AlarmActivity"
             android:exported="false"
+            android:directBootAware="true"
             android:theme="@style/Theme.Kairos"
             android:launchMode="singleTask"
             android:taskAffinity=""
@@ -92,16 +93,20 @@
 
         <receiver
             android:name=".system.AlarmReceiver"
+            android:directBootAware="true"
             android:exported="false" />
 
         <receiver
             android:name=".system.ActionReceiver"
+            android:directBootAware="true"
             android:exported="false" />
 
         <receiver
             android:name=".system.BootReceiver"
+            android:directBootAware="true"
             android:exported="true">
             <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.TIME_SET" />

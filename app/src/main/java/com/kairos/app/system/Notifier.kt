@@ -19,6 +19,7 @@ import com.kairos.app.R
 import com.kairos.app.data.Reminder
 import com.kairos.app.data.Settings
 import com.kairos.app.data.ThemeMode
+import com.kairos.app.logic.Chain
 import com.kairos.app.logic.Limits
 import com.kairos.app.logic.SnoozeMachine
 import com.kairos.app.logic.ToneSet
@@ -120,6 +121,36 @@ object Notifier {
             SnoozeMachine.Action.DONE -> R.string.action_done
         }
     )
+
+    /**
+     * Rings chain stage [rawStage] (3 = snoozed re-fire of the check) if it is still due; false when the alarm
+     * was stale. A notification already on screen is not started over: it rang before the first unlock or
+     * before an app update, and its alarm was set again since.
+     */
+    fun ring(ctx: Context, r: Reminder, rawStage: Int, settings: Settings): Boolean {
+        if (r.done || !Chain.shouldFire(rawStage, r.dueAt, r.snoozeUntil, System.currentTimeMillis())) return false
+        val stage = if (rawStage == Chain.SNOOZE_STAGE) 2 else rawStage
+        val again = isShowing(ctx, r.id, stage)
+        if (stage == 1) cancel(ctx, r.id, 0) // the heads-up is obsolete once T arrives
+        if (stage == 2) cancel(ctx, r.id, 1, closePopup = false) // the check replaces the main alert (and its ringing)
+        post(ctx, r, stage, settings, silent = again)
+        return true
+    }
+
+    /** deleteIntent: the user swiped a notification away, so put it straight back if it still applies. */
+    fun repost(ctx: Context, r: Reminder, stage: Int, settings: Settings) {
+        if (r.done) return
+        val now = System.currentTimeMillis()
+        if (stage == 0 && now >= r.dueAt) return
+        if (stage >= 1 && r.snoozeUntil == null && now < r.dueAt) return // an earlier occurrence
+        if (r.snoozeUntil != null && r.snoozeUntil > now) return
+        post(ctx, r, stage, settings, silent = stage < 1)
+    }
+
+    private fun isShowing(ctx: Context, id: Int, stage: Int): Boolean = runCatching {
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.activeNotifications.any { it.id == Codes.notif(id, stage) }
+    }.getOrDefault(false)
 
     @SuppressLint("MissingPermission")
     fun post(baseCtx: Context, stored: Reminder, stage: Int, settings: Settings, silent: Boolean = false) {

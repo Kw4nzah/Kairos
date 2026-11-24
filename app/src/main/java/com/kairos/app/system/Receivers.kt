@@ -22,12 +22,22 @@ const val EXTRA_ACTION = "action"
 const val EXTRA_DUE = "due"
 const val EXTRA_COUNT = "count"
 
-private fun BroadcastReceiver.async(context: Context, block: suspend (Repo) -> Unit) {
-    val pending = goAsync()
+/**
+ * Runs [block] off the main thread. Before the first unlock after a reboot it runs [locked] instead, since
+ * Room cannot be opened then (see [LockedMode]); null means nothing to do until the unlock.
+ */
+private fun BroadcastReceiver.async(
+    context: Context,
+    locked: (suspend (Context) -> Unit)? = null,
+    block: suspend (Repo) -> Unit
+) {
     val app = context.applicationContext
+    val isLocked = LockedMode.isLocked(app)
+    if (isLocked && locked == null) return
+    val pending = goAsync()
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            block(Repo(app))
+            if (isLocked) locked?.invoke(app) else block(Repo(app))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -45,7 +55,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val id = intent.getIntExtra(EXTRA_ID, -1)
         val stage = intent.getIntExtra(EXTRA_STAGE, -1)
         if (id <= 0 || stage < 0) return
-        async(context) { it.fire(id, stage) }
+        async(context, { LockedMode.fire(it, id, stage) }) { it.fire(id, stage) }
     }
 }
 
@@ -57,7 +67,7 @@ class ActionReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_REPOST -> {
                 val stage = intent.getIntExtra(EXTRA_STAGE, -1)
-                if (stage in 0..2) async(context) { it.repost(id, stage) }
+                if (stage in 0..2) async(context, { LockedMode.repost(it, id, stage) }) { it.repost(id, stage) }
             }
             ACTION_USER -> {
                 val action = runCatching {
@@ -65,7 +75,9 @@ class ActionReceiver : BroadcastReceiver() {
                 }.getOrNull() ?: return
                 val due = if (intent.hasExtra(EXTRA_DUE)) intent.getLongExtra(EXTRA_DUE, 0L) else null
                 val count = if (intent.hasExtra(EXTRA_COUNT)) intent.getIntExtra(EXTRA_COUNT, 0) else null
-                async(context) { it.handleAction(id, action, due, count) }
+                async(context, { LockedMode.handleAction(it, id, action, due, count) }) {
+                    it.handleAction(id, action, due, count)
+                }
             }
         }
     }
@@ -76,6 +88,7 @@ class ActionReceiver : BroadcastReceiver() {
  * has to be exported, and without this check any app could make overdue reminders ring again.
  */
 private val RESCHEDULE_ON = setOf(
+    Intent.ACTION_LOCKED_BOOT_COMPLETED,
     Intent.ACTION_BOOT_COMPLETED,
     Intent.ACTION_MY_PACKAGE_REPLACED,
     Intent.ACTION_TIME_CHANGED,
@@ -83,11 +96,17 @@ private val RESCHEDULE_ON = setOf(
     "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"
 )
 
-/** Restores alarms after reboot, app update or exact-alarm grant, and follows clock changes. */
+/**
+ * Restores alarms after reboot (also before the first unlock), app update or exact-alarm grant, and
+ * follows clock changes.
+ */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             !in RESCHEDULE_ON -> return
+            // Before the first unlock: ring from the locked copy. Without a PIN BOOT_COMPLETED follows at once.
+            Intent.ACTION_LOCKED_BOOT_COMPLETED ->
+                async(context, { LockedMode.boot(it) }) { /* unlocked already: BOOT_COMPLETED does it */ }
             // Alarms are wall-clock alarms and survive these. Rescheduling would ring every overdue one again.
             Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED -> async(context) { it.onClockChanged() }
             else -> async(context) { it.rescheduleAll() }

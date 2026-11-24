@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.kairos.app.system.Sounds
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 // An unreadable file (power cut mid-write) would otherwise crash every start and every alarm.
@@ -48,7 +49,8 @@ data class Settings(
 
 /** Local-only settings (DataStore). Nothing here ever leaves the device. */
 class Prefs(context: Context) {
-    private val store = context.applicationContext.kairosStore
+    private val ctx = context.applicationContext
+    private val store = ctx.kairosStore
 
     val settings: Flow<Settings> = store.data.map { p ->
         Settings(
@@ -64,22 +66,33 @@ class Prefs(context: Context) {
         store.edit {
             it[NAME] = name
         }
+        mirror()
     }
 
     suspend fun setDefaultSound(key: String) {
         store.edit { it[SOUND] = key }
+        mirror()
     }
 
     suspend fun setHardcore(on: Boolean) {
         store.edit { it[HARDCORE] = on }
+        mirror()
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {
         store.edit { it[THEME] = mode.name }
+        mirror()
     }
 
     suspend fun setLanguage(lang: AppLanguage) {
         store.edit { it[LANGUAGE] = lang.name }
+        mirror()
+    }
+
+    /** Name, theme and language are also needed to ring before the first unlock (see [LockedStore]). */
+    private suspend fun mirror() {
+        val now = settings.first()
+        LockedStore.update(ctx) { it?.copy(settings = now) }
     }
 
     private companion object {
