@@ -13,10 +13,10 @@ android {
         applicationId = "com.kairos.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 16
+        versionCode = (project.findProperty("vcode") as String?)?.toInt() ?: 17
         // The libraries ship some 80 languages; Kairos has three.
         resourceConfigurations += listOf("en", "tr", "ru")
-        versionName = (project.findProperty("vname") as String?) ?: "1.4.7"
+        versionName = (project.findProperty("vname") as String?) ?: "1.4.8"
     }
 
     // The release key lives outside the repo (default ~/.kairos-signing/kairos.p12 + password.txt,
