@@ -35,6 +35,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun save(r: Reminder) = viewModelScope.launch { repo.save(r) }
     fun delete(id: Int) = viewModelScope.launch { repo.delete(id) }
+    fun startTest(title: String) = viewModelScope.launch { repo.startTest(title) }
     fun complete(r: Reminder) = viewModelScope.launch { repo.complete(r.id, r.dueAt) }
     fun reopen(id: Int) = viewModelScope.launch { repo.reopen(id) }
 

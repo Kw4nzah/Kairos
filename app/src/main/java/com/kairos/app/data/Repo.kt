@@ -28,7 +28,27 @@ class Repo(context: Context) {
 
     fun observe(): Flow<List<Reminder>> = dao.observeAll()
 
-    suspend fun save(input: Reminder): Unit = write {
+    suspend fun save(input: Reminder): Unit = write { saveLocked(input) }
+
+    /**
+     * "Test the alarm": the real chain, 15 seconds from now. Only one exists at a time, and it is deleted as
+     * soon as it is answered (snooze, done or the list's tick), so testing leaves nothing behind.
+     */
+    suspend fun startTest(title: String): Unit = write {
+        prefs.testReminderId()?.let { deleteLocked(it) }
+        val id = saveLocked(Reminder(title = title, dueAt = System.currentTimeMillis() + TEST_DELAY_MS))
+        prefs.setTestReminderId(id)
+    }
+
+    /** True when [id] is the test alarm, which is then gone. */
+    private suspend fun endTest(id: Int): Boolean {
+        if (prefs.testReminderId() != id) return false
+        deleteLocked(id)
+        prefs.setTestReminderId(null)
+        return true
+    }
+
+    private suspend fun saveLocked(input: Reminder): Int {
         val zone = ZoneId.systemDefault()
         val day = Instant.ofEpochMilli(input.dueAt).atZone(zone).toLocalDate()
         val before = if (input.id == 0) null else dao.get(input.id)
@@ -55,10 +75,13 @@ class Repo(context: Context) {
         syncCalendar(saved)
         armNearest()
         changed()
+        return id
     }
 
-    suspend fun delete(id: Int): Unit = write {
-        val r = dao.get(id) ?: return@write
+    suspend fun delete(id: Int): Unit = write { deleteLocked(id) }
+
+    private suspend fun deleteLocked(id: Int) {
+        val r = dao.get(id) ?: return
         Notifier.cancelAll(ctx, id)
         Scheduler.cancel(ctx, id)
         r.calendarEventId?.let { withContext(Dispatchers.IO) { CalendarSync.deleteEvent(ctx, it) } }
@@ -77,6 +100,7 @@ class Repo(context: Context) {
         // The list redraws with the next occurrence before a double tap's second half lands on it.
         val tappedAt = SystemClock.elapsedRealtime()
         completedAt[id]?.let { if (tappedAt - it < DOUBLE_TAP_MS) return@write }
+        if (endTest(id)) return@write
         completeLocked(r)
         if (RepeatType.parse(r.repeatType) != RepeatType.NONE) completedAt[id] = SystemClock.elapsedRealtime()
     }
@@ -123,6 +147,7 @@ class Repo(context: Context) {
         val answered = ReminderState.answer(
             r, action, shownDue, shownCount, System.currentTimeMillis(), ZoneId.systemDefault()
         ) ?: return@write
+        if (endTest(id)) return@write
         if (answered.done || answered.dueAt != r.dueAt) {
             completeLocked(r)
         } else {
@@ -203,6 +228,7 @@ class Repo(context: Context) {
         }
         if (state.dirty.isEmpty()) return
         for (id in state.dirty) {
+            if (endTest(id)) continue // answered before the unlock
             val l = state.reminders.firstOrNull { it.id == id } ?: continue
             val r = dao.get(id) ?: continue
             val updated = r.copy(
@@ -237,6 +263,7 @@ class Repo(context: Context) {
         var reconciled = false // guarded by writes
 
         const val DOUBLE_TAP_MS = 1_000L
+        const val TEST_DELAY_MS = 15_000L
         val completedAt = HashMap<Int, Long>() // guarded by writes
     }
 

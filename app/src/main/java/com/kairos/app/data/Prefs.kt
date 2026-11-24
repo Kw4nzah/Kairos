@@ -5,6 +5,7 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.kairos.app.system.Sounds
@@ -89,6 +90,13 @@ class Prefs(context: Context) {
         mirror()
     }
 
+    /** The running test alarm (see [Repo.startTest]); not a user setting, so not part of [Settings]. */
+    suspend fun testReminderId(): Int? = store.data.first()[TEST_ID]
+
+    suspend fun setTestReminderId(id: Int?) {
+        store.edit { if (id == null) it.remove(TEST_ID) else it[TEST_ID] = id }
+    }
+
     /** Name, theme and language are also needed to ring before the first unlock (see [LockedStore]). */
     private suspend fun mirror() {
         val now = settings.first()
@@ -101,5 +109,6 @@ class Prefs(context: Context) {
         val NAME = stringPreferencesKey("name")
         val SOUND = stringPreferencesKey("default_sound")
         val HARDCORE = booleanPreferencesKey("hardcore")
+        val TEST_ID = intPreferencesKey("test_reminder_id")
     }
 }

@@ -213,12 +213,7 @@ fun SettingsScreen(
             }
             OutlinedButton(
                 onClick = {
-                    vm.save(
-                        com.kairos.app.data.Reminder(
-                            title = ctx.getString(R.string.test_alarm_title),
-                            dueAt = System.currentTimeMillis() + 15_000L
-                        )
-                    )
+                    vm.startTest(ctx.getString(R.string.test_alarm_title))
                     say(ctx.getString(R.string.test_alarm_started))
                 },
                 modifier = Modifier.fillMaxWidth()
